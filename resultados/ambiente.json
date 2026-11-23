@@ -1,0 +1,35 @@
+{
+  "utc": "2026-11-23T19:35:23+00:00",
+  "sistema": "Windows-11-10.0.26300-SP0",
+  "arquitetura": "AMD64",
+  "cpu": "11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz",
+  "processadores_logicos": 12,
+  "ram_bytes": 16905977856,
+  "python": "CPython 3.12.14",
+  "flags_python": [],
+  "compilador": "g++ (GCC) 11.2.0",
+  "flags_cpp": [
+    "-std=c++17",
+    "-O2",
+    "-DNDEBUG",
+    "-Wall",
+    "-Wextra",
+    "-pedantic"
+  ],
+  "relogios": {
+    "python": "time.perf_counter_ns",
+    "cpp": "QueryPerformanceCounter",
+    "resolucao_nominal_python_ns": 100.0
+  },
+  "n": [
+    3,
+    4,
+    6,
+    9,
+    13,
+    19
+  ],
+  "semente": 20261123,
+  "repeticoes_por_grupo": 15,
+  "aquecimento_por_algoritmo": 5
+}
