@@ -1,4 +1,4 @@
-"""Compara as quatro implementa��es com um or�culo por combina��es."""
+"""Compara as quatro implementações com um oráculo por combinações."""
 
 import argparse
 import os
@@ -63,7 +63,7 @@ def testar(comando, destino, casos):
     }
     if obtidas != esperadas:
         divergencias = [chave for chave, valor in esperadas.items() if obtidas.get(chave) != valor]
-        raise AssertionError(f"diverg�ncias ou registros extras em {comando[0]}: {divergencias[:10]}")
+        raise AssertionError(f"divergências ou registros extras em {comando[0]}: {divergencias[:10]}")
 
     escrever_tsv(entrada, [("negativo", "teste", 1, 1, (-1, 2))])
     execucao = subprocess.run([*comando, str(entrada), str(saida), "ambos"], capture_output=True)
@@ -79,7 +79,7 @@ def main():
     with TemporaryDirectory(prefix="subset-sum-testes-") as temp:
         for comando in (compilar(args.cxx), PYTHON):
             testar(comando, Path(temp), casos)
-    print(f"OK: {len(casos)} casos, {len(casos) * 4} decis�es e rejei��o de entrada negativa nas duas interfaces.")
+    print(f"OK: {len(casos)} casos, {len(casos) * 4} decisões e rejeição de entrada negativa nas duas interfaces.")
 
 
 if __name__ == "__main__":

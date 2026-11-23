@@ -1,4 +1,4 @@
-"""Verifica a fronteira de 60 segundos da for�a bruta em uma fam�lia de pior caso."""
+"""Verifica a fronteira de 60 segundos da força bruta em uma família de pior caso."""
 
 import argparse
 import csv

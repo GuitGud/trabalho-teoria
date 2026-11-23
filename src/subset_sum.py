@@ -1,10 +1,10 @@
-"""Algoritmos de decis�o para Subset Sum com inteiros n�o negativos."""
+"""Algoritmos de decisão para Subset Sum com inteiros não negativos."""
 
 from collections.abc import Sequence
 
 
 def forca_bruta(valores: Sequence[int], alvo: int) -> bool:
-    """Enumera m�scaras em ordem bin�ria e recalcula a soma de cada uma."""
+    """Enumera máscaras em ordem binária e recalcula a soma de cada uma."""
     n = len(valores)
     mascara = bytearray(n)
 
@@ -26,7 +26,7 @@ def forca_bruta(valores: Sequence[int], alvo: int) -> bool:
 
 
 def programacao_dinamica(valores: Sequence[int], alvo: int) -> bool:
-    """Atualiza a tabela de somas alcan��veis de tr�s para frente."""
+    """Atualiza a tabela de somas alcançáveis de trás para frente."""
     alcancavel = bytearray(alvo + 1)
     alcancavel[0] = 1
 

@@ -1,4 +1,4 @@
-"""Mede o efeito do alvo S com lista fixa e sempre sem solu��o."""
+"""Mede o efeito do alvo S com lista fixa e sempre sem solução."""
 
 import argparse
 import os
@@ -30,7 +30,7 @@ def main():
         subprocess.run([*comando, str(entradas), str(saida), "ambos"], check=True)
         medicoes[linguagem] = ler_csv(saida)
     verificar_respostas(medicoes, casos)
-    print(f"{sum(map(len, medicoes.values()))} medi��es verificadas com n = {N} fixo.")
+    print(f"{sum(map(len, medicoes.values()))} medições verificadas com n = {N} fixo.")
 
 
 if __name__ == "__main__":

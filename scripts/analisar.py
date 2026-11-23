@@ -1,4 +1,4 @@
-"""Resume as medi��es e produz gr�ficos vetoriais com ReportLab."""
+"""Resume as medições e produz gráficos vetoriais com ReportLab."""
 
 import argparse
 import csv
@@ -17,8 +17,8 @@ from gerar_entradas import RAIZ, REPETICOES
 from medir import ler_csv
 
 SERIES = (
-    ("forca_bruta", "python", "For�a bruta, Python", "#A64428"),
-    ("forca_bruta", "cpp", "For�a bruta, C++", "#A64428"),
+    ("forca_bruta", "python", "Força bruta, Python", "#A64428"),
+    ("forca_bruta", "cpp", "Força bruta, C++", "#A64428"),
     ("pd", "python", "PD, Python", "#006B67"),
     ("pd", "cpp", "PD, C++", "#006B67"),
 )
@@ -119,9 +119,9 @@ def grafico(linhas, eixo_x, normalizar=False):
         desenho.add(String(x + 23, y, rotulo, fontSize=8.5, fillColor=TEXTO))
 
     desenho.add(plot)
-    desenho.add(String(49, 204, "Raz�o normalizada (n = 19: 1)" if normalizar else "Tempo m�dio (�s, escala logar�tmica)",
+    desenho.add(String(49, 204, "Razão normalizada (n = 19: 1)" if normalizar else "Tempo médio (µs, escala logarítmica)",
                        fontName="Helvetica-Bold", fontSize=9, fillColor=TEXTO))
-    rotulo_x = "n (escala logar�tmica)" if eixo_x == "n" else "S (escala logar�tmica)"
+    rotulo_x = "n (escala logarítmica)" if eixo_x == "n" else "S (escala logarítmica)"
     desenho.add(String(257, 21, rotulo_x, textAnchor="middle", fontSize=8.5, fillColor=TEXTO))
     return desenho
 
@@ -152,7 +152,7 @@ def main():
     destino.mkdir(exist_ok=True)
     for nome, desenho in graficos.items():
         renderSVG.drawToFile(desenho, str(destino / f"{nome}.svg"))
-    print(f"{len(principal)} grupos principais, {len(contraste_alvo)} grupos de alvos e {len(graficos)} gr�ficos gravados.")
+    print(f"{len(principal)} grupos principais, {len(contraste_alvo)} grupos de alvos e {len(graficos)} gráficos gravados.")
 
 
 if __name__ == "__main__":

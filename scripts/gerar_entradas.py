@@ -1,4 +1,4 @@
-"""Gera casos determin�sticos para o estudo experimental de Subset Sum."""
+"""Gera casos determinísticos para o estudo experimental de Subset Sum."""
 
 import argparse
 import csv

@@ -23,7 +23,7 @@ using Valores = std::vector<Valor>;
 using Algoritmo = bool (*)(const Valores&, Valor);
 
 #ifdef _WIN32
-// O steady_clock de algumas compila��es MinGW registra apenas microssegundos.
+// O steady_clock de algumas compilações MinGW registra apenas microssegundos.
 using Instante = std::int64_t;
 
 Instante agora() {

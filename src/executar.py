@@ -16,7 +16,7 @@ MAX_SOMA = (1 << 63) - 1
 
 def inteiro(texto):
     if not texto or not texto.isascii() or not texto.isdecimal():
-        raise ValueError(f"inteiro n�o negativo esperado: {texto!r}")
+        raise ValueError(f"inteiro não negativo esperado: {texto!r}")
     return int(texto)
 
 
@@ -24,15 +24,15 @@ def ler_entradas(caminho):
     with caminho.open(encoding="utf-8", newline="") as arquivo:
         leitor = csv.reader(arquivo, delimiter="\t")
         if tuple(next(leitor, ())) != ENTRADA:
-            raise ValueError("cabe�alho TSV inv�lido")
+            raise ValueError("cabeçalho TSV inválido")
         casos = []
         for caso, cenario, n, alvo, repeticoes, dados in leitor:
             n, alvo, repeticoes = map(inteiro, (n, alvo, repeticoes))
             valores = tuple(map(inteiro, dados.split()))
             if len(valores) != n or repeticoes < 1 or not caso or not cenario:
-                raise ValueError(f"entrada inv�lida no caso {caso!r}")
+                raise ValueError(f"entrada inválida no caso {caso!r}")
             if sum(valores) > MAX_SOMA or alvo >= min(MAX_SOMA + 1, sys.maxsize):
-                raise ValueError(f"entrada fora dos limites num�ricos no caso {caso!r}")
+                raise ValueError(f"entrada fora dos limites numéricos no caso {caso!r}")
             casos.append((caso, cenario, n, alvo, repeticoes, valores))
         return casos
 
@@ -63,7 +63,7 @@ def main():
         with args.saida.open("w", encoding="utf-8", newline="") as arquivo:
             executar(casos, algoritmos, csv.writer(arquivo))
     except (OSError, ValueError, MemoryError) as erro:
-        parser.exit(1, f"Erro: {erro or 'mem�ria insuficiente'}\n")
+        parser.exit(1, f"Erro: {erro or 'memória insuficiente'}\n")
 
 
 if __name__ == "__main__":

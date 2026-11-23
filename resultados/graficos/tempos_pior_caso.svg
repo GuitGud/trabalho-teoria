@@ -11,9 +11,9 @@
 	<g id="group" transform="scale(1,-1) translate(0,-224)" style="clip-path: url(#clip)">
 		<g transform="">
 			<path d="M 26,12 L 44,12 Z" style="stroke: rgb(65%,26%,15%); stroke-linecap: butt; stroke-width: 1.6;"/>
-			<text x="49" y="9" style="font-family: Times-Roman; font-size: 8.5px;fill: rgb(13%,18%,27%); stroke:none;" transform="translate(0,18) scale(1,-1)">For�a bruta, Python</text>
+			<text x="49" y="9" style="font-family: Times-Roman; font-size: 8.5px;fill: rgb(13%,18%,27%); stroke:none;" transform="translate(0,18) scale(1,-1)">Força bruta, Python</text>
 			<path d="M 154,12 L 172,12 Z" style="stroke: rgb(65%,26%,15%); stroke-linecap: butt; stroke-width: 1.6; stroke-dasharray: 4, 2.5;"/>
-			<text x="177" y="9" style="font-family: Times-Roman; font-size: 8.5px;fill: rgb(13%,18%,27%); stroke:none;" transform="translate(0,18) scale(1,-1)">For�a bruta, C++</text>
+			<text x="177" y="9" style="font-family: Times-Roman; font-size: 8.5px;fill: rgb(13%,18%,27%); stroke:none;" transform="translate(0,18) scale(1,-1)">Força bruta, C++</text>
 			<path d="M 282,12 L 300,12 Z" style="stroke: rgb(0%,41%,40%); stroke-linecap: butt; stroke-width: 1.6;"/>
 			<text x="305" y="9" style="font-family: Times-Roman; font-size: 8.5px;fill: rgb(13%,18%,27%); stroke:none;" transform="translate(0,18) scale(1,-1)">PD, Python</text>
 			<path d="M 387,12 L 405,12 Z" style="stroke: rgb(0%,41%,40%); stroke-linecap: butt; stroke-width: 1.6; stroke-dasharray: 4, 2.5;"/>
@@ -131,8 +131,8 @@
 					<polygon points="451.8085 84.93149, 453.9085 87.03149, 456.0085 84.93149, 453.9085 82.83149" style="stroke: rgb(0%,41%,40%); stroke-linecap: butt; stroke-width: 0.1; fill: rgb(0%,41%,40%); fill-rule: evenodd;"/>
 				</g>
 			</g>
-			<text x="49" y="204" style="font-family: Helvetica-Bold; font-size: 9px;fill: rgb(13%,18%,27%); stroke:none;" transform="translate(0,408) scale(1,-1)">Tempo m�dio (�s, escala logar�tmica)</text>
-			<text x="220.178" y="21" style="font-family: Times-Roman; font-size: 8.5px;fill: rgb(13%,18%,27%); stroke:none;" transform="translate(0,42) scale(1,-1)">n (escala logar�tmica)</text>
+			<text x="49" y="204" style="font-family: Helvetica-Bold; font-size: 9px;fill: rgb(13%,18%,27%); stroke:none;" transform="translate(0,408) scale(1,-1)">Tempo médio (µs, escala logarítmica)</text>
+			<text x="220.178" y="21" style="font-family: Times-Roman; font-size: 8.5px;fill: rgb(13%,18%,27%); stroke:none;" transform="translate(0,42) scale(1,-1)">n (escala logarítmica)</text>
 		</g>
 	</g>
 </svg>

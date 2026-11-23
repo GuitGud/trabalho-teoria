@@ -111,7 +111,7 @@ def indexar_respostas(linhas):
 def verificar_respostas(dados, casos):
     esperadas = {}
     for identificador, _, alvo, repeticoes, valores in casos:
-        # Or�culo independente baseado em opera��es sobre um conjunto de bits.
+        # Oráculo independente baseado em operações sobre um conjunto de bits.
         somas = 1
         for valor in valores:
             somas |= somas << valor
@@ -126,7 +126,7 @@ def verificar_respostas(dados, casos):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--cxx", default=os.getenv("CXX", "g++"), help="execut�vel GCC/G++")
+    parser.add_argument("--cxx", default=os.getenv("CXX", "g++"), help="executável GCC/G++")
     parser.add_argument("--dados", type=Path, default=RAIZ / "dados")
     parser.add_argument("--saida", type=Path, default=RAIZ / "resultados")
     args = parser.parse_args()
@@ -145,7 +145,7 @@ def main():
         dados[linguagem] = ler_csv(destino)
     verificar_respostas(dados, casos)
     total = sum(map(len, dados.values()))
-    print(f"{total} medi��es verificadas em {len(casos)} entradas.", flush=True)
+    print(f"{total} medições verificadas em {len(casos)} entradas.", flush=True)
 
 
 if __name__ == "__main__":
