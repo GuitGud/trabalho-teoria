@@ -8,15 +8,15 @@ O problema sorteado para a Equipe 4 é o **Subconjunto Soma** (*Subset Sum*), em
 
 **Saída:** `SIM` se existir um subconjunto de índices $I \subseteq \{0, 1, \dots, n - 1\}$ tal que $\sum_{i \in I} v_i = S$, ou `NÃO` caso contrário.
 
-Cada posição da lista pode ser usada no máximo uma vez. Valores repetidos ocupam índices distintos e contam como elementos separados (por exemplo, $V = [5, 5]$ e $S = 10$ tem resposta `SIM` via $I = \{0, 1\}$). O subconjunto vazio ($I = \emptyset$) tem soma $0$, logo toda instância com $S = 0$ tem resposta `SIM`, inclusive quando $n = 0$.
+Cada posição da lista pode ser usada no máximo uma vez; valores repetidos ocupam índices distintos e contam como elementos separados (por exemplo, $V = [5, 5]$ e $S = 10$ tem resposta `SIM` via $I = \{0, 1\}$). Como o subconjunto vazio ($I = \emptyset$) tem soma $0$, toda instância com $S = 0$ responde `SIM`, inclusive quando $n = 0$.
 
 ## Lógica geral e pseudocódigo
 
-Ambos os algoritmos foram implementados em Python (CPython) e C++17 (`src/subset_sum.py` e `src/subset_sum.cpp`), preservando a mesma lógica e ordem de operações.
+Ambos os algoritmos foram implementados em Python (CPython) e C++17 (`src/subset_sum.py` e `src/subset_sum.cpp`), com a mesma lógica e ordem de operações.
 
 ### Algoritmo A: Força bruta por máscaras binárias
 
-Cada subconjunto de índices é representado por um vetor binário `mascara` de tamanho $n$, com bit menos significativo na posição $0$. A máscara inicia zerada e avança como um contador binário. Para cada máscara visitada, o algoritmo percorre todas as $n$ posições para recalcular a soma dos itens marcados; se a soma igualar $S$, retorna `SIM`. No incremento, zeram-se os bits iniciais iguais a $1$ até encontrar o primeiro bit $0$, trocando-o para $1$; quando todos os $n$ bits são $1$ ($i = n$), todas as $2^n$ máscaras foram testadas sem sucesso e retorna-se `NÃO`.
+Um vetor binário `mascara` de tamanho $n$ (bit menos significativo na posição $0$) representa o subconjunto atual e avança como um contador binário a partir de zero. A cada máscara, o algoritmo percorre as $n$ posições para somar os itens marcados e retorna `SIM` se atingir $S$. Para incrementar o contador, zera os bits iniciais iguais a $1$ até o primeiro $0$, trocando-o para $1$; quando todos os bits são $1$ ($i = n$), todas as $2^n$ máscaras foram testadas e retorna-se `NÃO`.
 
 ```text
 algoritmo ForcaBruta(valores, alvo):
@@ -42,7 +42,7 @@ algoritmo ForcaBruta(valores, alvo):
 
 ### Algoritmo B: Programação dinâmica unidimensional
 
-A programação dinâmica (PD) mantém um vetor booleano `alcancavel` de tamanho $S + 1$, inicializado com `falso`, exceto `alcancavel[0] = verdadeiro`. Após processar os $i$ primeiros itens, `alcancavel[s]` indica se existe um subconjunto desses itens com soma $s$. Para cada item `valor`, o laço interno percorre `soma` em ordem decrescente de $S$ até $0$, atualizando `alcancavel[soma]` para `verdadeiro` sempre que `soma >= valor` e `alcancavel[soma - valor]` já for `verdadeiro`. Apenas posições entre $S$ e `valor` podem mudar, mas percorrer até $0$ com a guarda `soma >= valor` corresponde diretamente ao código em Python e C++ e mantém o número de iterações fixo em $S + 1$ por item. Ao final, retorna-se `SIM` se `alcancavel[alvo]` for `verdadeiro`.
+A programação dinâmica (PD) mantém um vetor booleano `alcancavel` de tamanho $S + 1$, inicialmente `falso`, exceto `alcancavel[0] = verdadeiro`. Após processar os $i$ primeiros itens, `alcancavel[s]` indica se algum subconjunto deles soma $s$. Para cada `valor`, o laço interno percorre `soma` de $S$ até $0$ (mantendo $S + 1$ iterações fixas por item) e marca `alcancavel[soma] = verdadeiro` quando `soma >= valor` e `alcancavel[soma - valor]` é `verdadeiro`. Ao final, retorna `SIM` se `alcancavel[alvo]` for `verdadeiro`.
 
 ```text
 algoritmo ProgramacaoDinamica(valores, alvo):
@@ -62,16 +62,13 @@ algoritmo ProgramacaoDinamica(valores, alvo):
 
 ### Por que a atualização decrescente é obrigatória
 
-Como o vetor `alcancavel` é atualizado no local (*in-place*), percorrer `soma` de $S$ até $0$ assegura que, ao ler `alcancavel[soma - valor]` (com `valor > 0`), essa posição ainda guarde o estado anterior ao item atual, impedindo sua reutilização. Considere $V = [4]$ e $S = 8$, cuja resposta correta é `NÃO`:
-
-- **Ordem decrescente (correta):** ao processar $4$, testa-se $s = 8$ antes de $s = 4$. Como `alcancavel[8 - 4] = alcancavel[4]` ainda é `falso`, `alcancavel[8]` permanece `falso`. Depois, em $s = 4$, `alcancavel[0]` é `verdadeiro` e marca-se `alcancavel[4] = verdadeiro`. Resultado: `NÃO`.
-- **Ordem crescente (incorreta):** em $s = 4$, marcaria `alcancavel[4] = verdadeiro` usando o item $4$; na mesma passagem, em $s = 8$, leria esse novo valor e marcaria `alcancavel[8] = verdadeiro`, reutilizando o item duas vezes ($4 + 4 = 8$).
+Como `alcancavel` é atualizado no local (*in-place*), percorrer `soma` de $S$ até $0$ garante que `alcancavel[soma - valor]` (para `valor > 0`) ainda guarde o estado anterior ao item atual, impedindo sua reutilização. Com $V = [4]$ e $S = 8$ (resposta `NÃO`), a ordem decrescente testa $s = 8$ antes de $s = 4$: `alcancavel[4]` ainda é `falso`, logo `alcancavel[8]` permanece `falso` e apenas `alcancavel[4]` é marcado depois. Em ordem crescente, $s = 4$ marcaria `alcancavel[4]` e, na mesma passagem, $s = 8$ leria esse valor novo e marcaria `alcancavel[8] = verdadeiro`, reutilizando o item duas vezes ($4 + 4 = 8$).
 
 ## Exemplo resolvido à mão
 
-Seja $V = [3, 5, 9, 12]$ ($n = 4$) e alvo $S = 14$. A resposta é `SIM`, obtida por $v_1 + v_2 = 5 + 9 = 14$.
+Seja $V = [3, 5, 9, 12]$ ($n = 4$) e $S = 14$. A resposta é `SIM`, via $v_1 + v_2 = 5 + 9 = 14$.
 
-**Força bruta:** com `mascara[0]` associado a $3$, `mascara[1]` a $5$, `mascara[2]` a $9$ e `mascara[3]` a $12$, o contador visita $7$ das $2^4 = 16$ máscaras até parar:
+Na força bruta, com `mascara[0..3]` associado a $[3, 5, 9, 12]$, o contador visita $7$ das $2^4 = 16$ máscaras até parar:
 
 | Passo | Máscara `[m0, m1, m2, m3]` | Subconjunto | Soma | Ação |
 | :---: | :---: | :---: | :---: | --- |
@@ -83,7 +80,7 @@ Seja $V = [3, 5, 9, 12]$ ($n = 4$) e alvo $S = 14$. A resposta é `SIM`, obtida 
 | 6 | `[1, 0, 1, 0]` | $\{3, 9\}$ | 12 | $12 \neq 14$; incrementa |
 | 7 | `[0, 1, 1, 0]` | $\{5, 9\}$ | 14 | $14 = 14$; retorna `SIM` |
 
-**Programação dinâmica:** o vetor `alcancavel[0..14]` evolui item a item conforme abaixo (somas acima de $14$ ficam fora da tabela):
+Na programação dinâmica, o vetor `alcancavel[0..14]` evolui item a item (somas acima de $14$ ficam fora do vetor):
 
 | Etapa | Novas marcas (ordem decrescente) | Índices verdadeiros em `alcancavel` |
 | --- | --- | --- |
@@ -93,66 +90,53 @@ Seja $V = [3, 5, 9, 12]$ ($n = 4$) e alvo $S = 14$. A resposta é `SIM`, obtida 
 | $v_2 = 9$ | $s = 14$ (de $5$), $s = 12$ (de $3$), $s = 9$ (de $0$) | $\{0, 3, 5, 8, 9, 12, 14\}$ |
 | $v_3 = 12$ | nenhuma nova ($s = 12$ já verdadeiro) | $\{0, 3, 5, 8, 9, 12, 14\}$ |
 
-Ao término do laço externo, `alcancavel[14]` é `verdadeiro` e o algoritmo retorna `SIM`. Note que, mesmo marcando $14$ no item $9$, a PD ainda processa o item $12$.
+Ao final, `alcancavel[14]` é `verdadeiro` e o algoritmo retorna `SIM`; mesmo alcançando $14$ em $v_2 = 9$, a PD ainda processa $v_3 = 12$.
 
 # 2. Classificação assintótica
 
-Adota-se o modelo RAM de custo unitário, assumindo que valores, somas e índices cabem em uma palavra de máquina (operações aritméticas e acessos a memória em tempo $O(1)$). As expressões assintóticas principais assumem $n \ge 1$ e $S \ge 1$ (no caso $n = 0$, a força bruta custa $\Theta(1)$ e a PD custa $\Theta(S + 1)$).
+Adota-se o modelo RAM de custo unitário, no qual valores, somas e índices cabem em uma palavra de máquina (operações aritméticas e acessos à memória em tempo $O(1)$). As expressões principais assumem $n \ge 1$ e $S \ge 1$; para $n = 0$, a força bruta custa $\Theta(1)$ e a PD custa $\Theta(S + 1)$.
 
 ## Algoritmo A: Força bruta
 
 ### Contagem de operações
 
-A alocação e inicialização de `mascara` custam $\Theta(n)$. Suponha que o algoritmo visite $m$ máscaras até encerrar ($1 \le m \le 2^n$):
+Alocar e inicializar `mascara` custa $\Theta(n)$. Supondo que o algoritmo visite $m$ máscaras ($1 \le m \le 2^n$), o laço interno percorre todas as $n$ posições a cada máscara, executando $n$ testes, de $0$ a $n$ somas e uma comparação com `alvo`, o que custa $\Theta(n)$ por máscara e $\Theta(m \cdot n)$ no total.
 
-- **Varredura por máscara:** o laço interno percorre todas as $n$ posições de `mascara`, executando $n$ testes, entre $0$ e $n$ somas e uma comparação com `alvo`. Logo, cada máscara visitada custa $\Theta(n)$ operações, totalizando $\Theta(m \cdot n)$.
-- **Incrementos do contador binário:** se uma solução é encontrada após visitar $m$ máscaras, ocorrem $k = m - 1$ avanços do contador; se não há solução, ocorrem $k = 2^n = m$ tentativas de avanço, sendo que a última zera a máscara e detecta o estouro ($i = n$). Um único avanço custa $O(n)$ no pior passo (todos os bits iguais a $1$). Contudo, ao longo de $k$ avanços a partir de zero, o bit $j$ ($0 \le j < n$) é alterado exatamente $\lfloor k / 2^j \rfloor$ vezes. O total de inversões de bits em $k$ avanços é:
+Nos avanços do contador binário, ocorrem $k = m - 1$ incrementos quando há solução e $k = 2^n = m$ tentativas quando não há (a última zera a máscara e detecta $i = n$). Embora um único avanço custe $O(n)$ no pior passo, ao longo de $k$ incrementos a partir de zero o bit $j$ ($0 \le j < n$) é invertido exatamente $\lfloor k / 2^j \rfloor$ vezes:
 
 $$\sum_{j=0}^{n-1} \left\lfloor \frac{k}{2^j} \right\rfloor \le \sum_{j=0}^{n-1} \frac{k}{2^j} \le 2k.$$
 
-Portanto, o custo total dos avanços é $O(m)$, isto é, custo amortizado $O(1)$ por máscara visitada (CORMEN et al., 2009, seção 17.1).
-
-Combinando inicialização, varreduras e incrementos, o tempo para $m$ máscaras visitadas é:
+Logo, o custo total dos incrementos é $O(m)$, ou $O(1)$ amortizado por máscara (CORMEN et al., 2009, seção 17.1). Somando inicialização, varreduras e incrementos:
 
 $$T(n, m) = \Theta(n) + \Theta(m \cdot n) + O(m) = \Theta(m \cdot n).$$
 
 ### Limites $O$, $\Omega$ e $\Theta$
 
-É necessário separar os limites válidos **sobre todas as entradas** de tamanho $n$ dos limites da função de tempo de **um caso específico**:
-
-- **Big-O ($O$) sobre todas as entradas:** como $m \le 2^n$, o tempo nunca ultrapassa $c_2 n \cdot 2^n$, logo $T(n) = O(n \cdot 2^n)$.
-- **Big-$\Omega$ ($\Omega$) sobre todas as entradas:** a primeira varredura (máscara nula) ocorre em toda entrada ($m \ge 1$), logo $T(n) = \Omega(n)$.
-- **Big-$\Theta$ ($\Theta$):** para um mesmo $n \ge 1$, uma instância com $S > 0$ e $v_0 = S$ visita duas máscaras ($m = 2$) e custa $\Theta(n)$, enquanto uma instância sem solução visita $2^n$ máscaras ($m = 2^n$) e custa $\Theta(n \cdot 2^n)$. Como as ordens diferem ($n = o(n \cdot 2^n)$), nenhuma função apenas de $n$ fornece um limite $\Theta$ válido para toda instância; para uma instância que visita $m$ máscaras, o limite justo é $\Theta(m \cdot n)$. Por caso, tem-se $T_{\text{pior}}(n) = \Theta(n \cdot 2^n)$ ($m = 2^n$) e $T_{\text{melhor}}(n) = \Theta(n)$ ($m \in \{1, 2\}$).
+Sobre todas as entradas de tamanho $n$, como $1 \le m \le 2^n$, a primeira varredura sempre ocorre e nenhuma execução supera $2^n$ máscaras; portanto $T(n) = O(n \cdot 2^n)$ e $T(n) = \Omega(n)$. Para um mesmo $n \ge 1$, uma instância com $S > 0$ e $v_0 = S$ visita $m = 2$ máscaras e custa $\Theta(n)$, enquanto uma instância sem solução visita $m = 2^n$ máscaras e custa $\Theta(n \cdot 2^n)$. Como $n = o(n \cdot 2^n)$, nenhuma função apenas de $n$ dá um limite $\Theta$ válido para toda instância: o limite justo por instância é $\Theta(m \cdot n)$, resultando em $T_{\text{pior}}(n) = \Theta(n \cdot 2^n)$ e $T_{\text{melhor}}(n) = \Theta(n)$.
 
 ### Espaço auxiliar
 
-Além da entrada, aloca-se apenas o vetor `mascara` de $n$ bytes e variáveis escalares constantes, totalizando espaço auxiliar $\Theta(n)$.
+Além da entrada, o algoritmo aloca apenas `mascara` ($n$ bytes) e variáveis escalares constantes: espaço auxiliar $\Theta(n)$.
 
 ## Algoritmo B: Programação dinâmica
 
 ### Recorrência
 
-Definindo $A[i][s] \in \{\text{verdadeiro}, \text{falso}\}$ como a existência de um subconjunto dos $i$ primeiros itens $\{v_0, \dots, v_{i-1}\}$ com soma $s$ ($0 \le i \le n$, $0 \le s \le S$), tem-se o caso base $A[0][0] = \text{verdadeiro}$ e $A[0][s] = \text{falso}$ para $1 \le s \le S$, e a recorrência:
+Seja $A[i][s] \in \{\text{verdadeiro}, \text{falso}\}$ a existência de um subconjunto de $\{v_0, \dots, v_{i-1}\}$ com soma $s$ ($0 \le i \le n$, $0 \le s \le S$). Com caso base $A[0][0] = \text{verdadeiro}$ e $A[0][s] = \text{falso}$ para $1 \le s \le S$, vale:
 
 $$A[i][s] = \begin{cases} A[i - 1][s], & \text{se } s < v_{i-1}, \\ A[i - 1][s] \lor A[i - 1][s - v_{i-1}], & \text{se } s \ge v_{i-1}. \end{cases}$$
 
-A resposta é $A[n][S]$. Como a linha $i$ depende apenas da linha $i - 1$ em índices menores ou iguais a $s$, o código mantém uma única linha `alcancavel[0..S]`, atualizada de $S$ até $0$.
+A resposta é $A[n][S]$. Como a linha $i$ depende apenas da linha $i - 1$ em índices $\le s$, basta manter uma única linha `alcancavel[0..S]`, atualizada de $S$ até $0$.
 
 ### Contagem de operações e limites $O$, $\Omega$ e $\Theta$
 
-Para qualquer entrada de parâmetros $n$ e $S$:
-
-1. Inicializam-se exatamente $S + 1$ células de `alcancavel` ($\Theta(S + 1)$).
-2. O laço externo executa $n$ vezes e o laço interno executa $S + 1$ vezes por item, sem parada antecipada, somando exatamente $n \cdot (S + 1)$ iterações internas.
-3. Cada iteração realiza uma comparação e, no máximo, uma leitura e uma escrita em tempo $\Theta(1)$.
-
-O total de operações é $(S + 1) + \Theta(n \cdot (S + 1)) = \Theta((n + 1)(S + 1))$. Para $n \ge 1$ e $S \ge 1$, obtêm-se simultaneamente $T(n, S) = O(n \cdot S)$ e $T(n, S) = \Omega(n \cdot S)$, logo $T(n, S) = \Theta(n \cdot S)$ em **todos os casos**.
+Para qualquer entrada, inicializam-se $S + 1$ células ($\Theta(S + 1)$), o laço externo executa $n$ vezes e o interno executa $S + 1$ vezes sem parada antecipada, somando $n \cdot (S + 1)$ iterações de custo $\Theta(1)$ cada (uma comparação e, no máximo, uma leitura e uma escrita). O total é $(S + 1) + \Theta(n \cdot (S + 1)) = \Theta((n + 1)(S + 1))$. Para $n \ge 1$ e $S \ge 1$, têm-se simultaneamente $T(n, S) = O(n \cdot S)$ e $T(n, S) = \Omega(n \cdot S)$, logo $T(n, S) = \Theta(n \cdot S)$ em todos os casos.
 
 ### Espaço auxiliar e caráter pseudopolinomial
 
-O espaço auxiliar é $\Theta(S + 1)$ (ou $\Theta(S)$ para $S \ge 1$: o vetor `alcancavel` de $S + 1$ bytes, reduzido de $\Theta(n \cdot S)$ da matriz completa). Como a equipe também realizou a medição empírica de memória (bônus opcional), esses limites teóricos de espaço ($\Theta(n)$ para força bruta e $\Theta(S + 1)$ para PD) são confrontados com os dados experimentais na Seção 6.
+O vetor `alcancavel` reduz o espaço auxiliar de $\Theta(n \cdot S)$ da matriz completa para $\Theta(S + 1)$ (ou $\Theta(S)$ para $S \ge 1$). Na Seção 6, esses limites de espaço ($\Theta(n)$ na força bruta e $\Theta(S + 1)$ na PD) são confrontados com medições diretas de memória.
 
-Embora $\Theta(n \cdot S)$ seja polinomial no valor numérico de $S$, a complexidade formal é medida em função do **comprimento da entrada em bits** (GAREY; JOHNSON, 1979; MIT OPENCOURSEWARE, 2020a). Como $S \ge 1$ é codificado em $b = \lfloor \log_2 S \rfloor + 1 = \Theta(\log S)$ bits, tem-se $S \ge 2^{b - 1}$. Logo, tempo e espaço da PD crescem **exponencialmente** no número de bits de $S$, caracterizando um algoritmo **pseudopolinomial**.
+Embora $\Theta(n \cdot S)$ seja polinomial no valor numérico de $S$, a complexidade formal mede-se pelo comprimento da entrada em bits (GAREY; JOHNSON, 1979; MIT OPENCOURSEWARE, 2020a). Como $S \ge 1$ requer $b = \lfloor \log_2 S \rfloor + 1 = \Theta(\log S)$ bits e $S \ge 2^{b - 1}$, tempo e espaço da PD crescem exponencialmente em $b$, caracterizando um algoritmo **pseudopolinomial**.
 
 | Algoritmo | $O$ (geral) | $\Omega$ (geral) | $\Theta$ (pior caso) | $\Theta$ (melhor caso) | Espaço auxiliar |
 | --- | :---: | :---: | :---: | :---: | :---: |
@@ -163,64 +147,53 @@ Embora $\Theta(n \cdot S)$ seja polinomial no valor numérico de $S$, a complexi
 
 ## Algoritmo A: Força bruta
 
-- **Melhor caso ($\Theta(n)$):** ocorre quando o alvo é $S = 0$ (a primeira máscara, nula, já soma $0$) ou quando $v_0 = S$ com $S > 0$ (a segunda máscara, `[1, 0, ..., 0]`, já soma $S$). Nos experimentos, o melhor caso forçado usa $v_0 = S$ (com $S = 20n + 1$), evitando o caso degenerado $S = 0$ e mantendo $S$ na mesma escala dos demais cenários.
-- **Pior caso ($\Theta(n \cdot 2^n)$):** ocorre em toda instância sem solução (ou cuja única solução é a última máscara, toda igual a $1$), obrigando a visita às $2^n$ máscaras. Nos experimentos, o pior caso é forçado com todos os $n$ valores **pares** e o alvo $S = 20n + 1$ **ímpar**: como qualquer soma de pares é par, nenhuma combinação atinge $S$ e a busca é necessariamente exaustiva.
-- **Caso médio ($\Theta(n \cdot 2^n)$ sob a distribuição experimental):** o tempo médio depende da distribuição das entradas. No experimento, cada instância aleatória sorteia $n$ valores $v_0, \dots, v_{n-1}$ independentes e uniformes em $\{1, 2, \dots, 39\}$, com alvo $S = 20n + 1$. Cada $v_i$ tem distribuição simétrica em torno da média $20$ ($v_i$ e $40 - v_i$ são identicamente distribuídas); pela independência, a soma total $W = \sum_{i=0}^{n-1} v_i$ é simétrica em torno de $20n$. Assim, $\Pr[W \le 20n] = \Pr[W \ge 20n]$ e, como $\Pr[W \le 20n] + \Pr[W \ge 20n] = 1 + \Pr[W = 20n] \ge 1$, resulta:
+No melhor caso ($\Theta(n)$), o alvo é $S = 0$ (a primeira máscara, nula, já soma $0$) ou $v_0 = S > 0$ (a segunda máscara, `[1, 0, ..., 0]`, já soma $S$). Nos experimentos, usa-se $v_0 = S = 20n + 1$, evitando o caso degenerado $S = 0$ e mantendo $S$ na escala dos demais cenários.
+
+No pior caso ($\Theta(n \cdot 2^n)$), a instância não tem solução ou tem como única solução a última máscara (toda igual a $1$), obrigando a visita às $2^n$ máscaras. Nos experimentos, todos os $n$ valores são pares e $S = 20n + 1$ é ímpar; como qualquer soma de pares é par, nenhuma combinação atinge $S$ e a busca é sempre exaustiva.
+
+O caso médio depende da distribuição das entradas. Nas instâncias aleatórias do experimento, os $n$ valores $v_0, \dots, v_{n-1}$ são independentes e uniformes em $\{1, 2, \dots, 39\}$, com alvo $S = 20n + 1$. Como cada $v_i$ tem a mesma distribuição de $40 - v_i$, a soma total $W = \sum_{i=0}^{n-1} v_i$ é simétrica em torno de $20n$; logo $\Pr[W \le 20n] = \Pr[W \ge 20n]$ e $\Pr[W \le 20n] + \Pr[W \ge 20n] = 1 + \Pr[W = 20n] \ge 1$, donde:
 
 $$\Pr[W < S] = \Pr[W \le 20n] \ge \frac{1}{2}.$$
 
-No evento $W < S$, nenhum subconjunto alcança $S$, de modo que todas as $2^n$ máscaras são visitadas e cada visita realiza ao menos $c_1 \cdot n$ operações para uma constante $c_1 > 0$. Portanto:
+Quando $W < S$, nenhum subconjunto alcança $S$, todas as $2^n$ máscaras são visitadas e cada visita custa ao menos $c_1 \cdot n$ operações para uma constante $c_1 > 0$. Portanto:
 
 $$\mathbb{E}[T(n)] \ge \Pr[W < S] \cdot c_1 \cdot n \cdot 2^n \ge \frac{1}{2} \cdot c_1 \cdot n \cdot 2^n = \Omega(n \cdot 2^n).$$
 
-Como o limite superior é $O(n \cdot 2^n)$, o tempo esperado é $\Theta(n \cdot 2^n)$. Ainda assim, quando $W \ge S$ e existe solução, a busca encerra na primeira máscara válida na ordem do contador binário, podendo parar muito cedo. A mistura entre instâncias sem solução (custo total) e instâncias com parada precoce explica o desvio-padrão elevado observado no cenário aleatório.
+Com o limite superior $O(n \cdot 2^n)$, o tempo esperado é $\Theta(n \cdot 2^n)$. Quando $W \ge S$ e existe solução, a busca encerra na primeira máscara válida na ordem do contador binário, gerando grande dispersão entre instâncias com e sem solução.
 
 ## Algoritmo B: Programação dinâmica
 
-Na PD implementada, **melhor, pior e caso médio coincidem em $\Theta(n \cdot S)$**, pois ambos os laços dependem apenas de $n$ e $S$, jamais dos valores de $V$ nem da existência de solução. Os valores decidem com que frequência a guarda `soma >= valor` permite executar a subtração e a leitura em `alcancavel[soma - valor]`, bem como quantas dessas leituras resultam em escrita; isso altera o custo por iteração, mas não a ordem do custo total. Por isso, os casos forçados nos experimentos são definidos segundo a força bruta, mas todas as quatro implementações rodam sobre exatamente as mesmas entradas.
+Na PD implementada, melhor, pior e caso médio coincidem em $\Theta(n \cdot S)$, pois ambos os laços dependem apenas de $n$ e $S$, nunca dos valores de $V$ nem da existência de solução. Os valores afetam apenas quantas vezes a guarda `soma >= valor` é satisfeita e quantas posições passam a `verdadeiro`, alterando o custo por iteração sem mudar a ordem assintótica. Nos experimentos, os cenários são definidos segundo a força bruta, mas as quatro implementações rodam sempre sobre as mesmas entradas.
 
 # 4. Aplicabilidade prática
 
-Comparando o pior caso da força bruta ($\Theta(n \cdot 2^n)$) com a programação dinâmica ($\Theta(n \cdot S)$), o fator $n$ é comum aos dois algoritmos; assim, a regra assintótica de cruzamento no pior caso consiste em comparar $2^n$ com $S$ (ou $n$ com $\log_2 S$):
+Como o pior caso da força bruta ($\Theta(n \cdot 2^n)$) e a PD ($\Theta(n \cdot S)$) compartilham o fator $n$, a fronteira assintótica no pior caso compara $2^n$ com $S$ (ou $n$ com $\log_2 S$): se $2^n \ll S$, a força bruta vence em tempo e memória; se $S \ll 2^n$, a PD é ordens de grandeza mais rápida. Mesmo com $S \ll 2^n$, a força bruta ainda pode terminar antes se houver solução entre as primeiras máscaras.
 
-- se $2^n \ll S$, a **força bruta** é preferível em tempo e memória;
-- se $S \ll 2^n$, a **programação dinâmica** é ordens de grandeza mais rápida no pior caso.
+A força bruta é indicada quando $n$ é pequeno e $S$ é muito grande, ou quando a memória é restrita. Em uma auditoria financeira com $n = 20$ pagamentos em centavos e alvo $S = 10^{10}$ (R\$ 100 milhões), a força bruta visita no máximo $2^{20} \approx 10^6$ máscaras usando $20$ bytes auxiliares, enquanto a PD exigiria cerca de $10$ GB de RAM e $2 \times 10^{11}$ iterações. Por usar espaço $\Theta(n)$ independente de $S$ e ter lógica simples, a força bruta também funciona como oráculo confiável para validar implementações mais complexas em instâncias pequenas.
 
-Ainda assim, em uma instância cuja solução esteja entre as primeiras máscaras visitadas, a força bruta pode terminar antes da PD mesmo quando $S$ é muito menor que $2^n$.
+A programação dinâmica é preferível quando $n$ é moderado ou grande e $S$ permanece moderado. No pior caso, $2^n$ esgota rapidamente o tempo disponível (em nossos testes, a força bruta concluiu até $n = 26$ em Python e $n = 30$ em C++ em menos de $60\text{ s}$, sendo interrompida em $n = 27$ e $n = 31$), enquanto a PD resolve centenas de itens com $S$ na casa de milhares ou poucos milhões. É o caso ao reconciliar $n = 200$ valores pequenos para somar $S = 5.000$ ($10^6$ iterações contra $2^{200}$ máscaras) ou verificar se $n = 100$ durações em segundos preenchem uma janela de $S = 3.600$ segundos ($3{,}6 \times 10^5$ iterações e $3{,}6$ KB de RAM). Além disso, seu custo $\Theta(n \cdot S)$ é previsível, independentemente de haver solução.
 
-**Quando preferir a força bruta:**
-
-1. **$n$ muito pequeno e $S$ muito grande:** em uma auditoria financeira com $n = 20$ pagamentos em centavos cujo alvo atinge bilhões (por exemplo, $S = 10^{10}$ centavos, ou R\$ 100 milhões), a força bruta visita no máximo $2^{20} \approx 10^6$ máscaras usando apenas $20$ bytes auxiliares, enquanto o vetor da PD exigiria cerca de $10$ GB de RAM e $2 \times 10^{11}$ iterações, sendo impraticável.
-2. **Memória muito restrita e uso como oráculo:** o espaço $\Theta(n)$ não depende de $S$, e a simplicidade da enumeração torna a força bruta um oráculo confiável para testar implementações mais complexas em instâncias pequenas.
-
-**Quando preferir a programação dinâmica:**
-
-1. **$n$ moderado ou grande com $S$ moderado:** à medida que $n$ cresce, o fator $2^n$ rapidamente esgota o orçamento de tempo disponível no pior caso (nossas próprias medições concluíram $n = 26$ em Python e $n = 30$ em C++ em menos de $60\text{ s}$, mas já foram interrompidas em $n = 27$ e $n = 31$), enquanto a PD resolve centenas de itens com $S$ na casa de milhares ou poucos milhões. Exemplos concretos incluem dividir uma conta ou reconciliar $n = 200$ itens de pequeno valor para compor exatamente $S = 5.000$ unidades ($10^6$ iterações, contra $2^{200}$ máscaras) e verificar se um subconjunto de $n = 100$ durações em segundos preenche exatamente uma janela de $S = 3.600$ segundos ($3{,}6 \times 10^5$ iterações e $3{,}6$ KB de RAM).
-2. **Tempo previsível:** o custo $\Theta(n \cdot S)$ independe de os itens terem solução ou não.
-
-**Gargalo de memória da PD e alternativa para $n$ e $S$ grandes:** para alvos muito grandes, o espaço auxiliar $\Theta(S)$ limita a PD antes mesmo do tempo ($S = 10^9$ ocupa $1$ GB com 1 byte por célula; mesmo com *bitset* de 1 bit por soma, $S \ge 10^{12}$ excede a RAM de máquinas comuns). Quando tanto $n$ quanto $S$ são grandes (por exemplo, $n = 40$ e $S = 10^{15}$), uma alternativa prática conhecida, **não implementada** neste trabalho, é o método **meet-in-the-middle** (HOROWITZ; SAHNI, 1974), que divide a lista em dois grupos de tamanhos $\lfloor n/2 \rfloor$ e $\lceil n/2 \rceil$, gera as somas de cada lado e busca pares que somem $S$ com espaço $O(2^{n/2})$, independente de $S$: a variante que ordena as listas de somas custa $O(n \cdot 2^{n/2})$, enquanto o algoritmo original de Horowitz e Sahni gera as listas já ordenadas por intercalação e decide o problema em $O(2^{n/2})$ operações.
+Para alvos muito grandes, o espaço $\Theta(S)$ limita a PD antes mesmo do tempo: $S = 10^9$ ocupa $1$ GB com 1 byte por célula, e mesmo com *bitset* de 1 bit por soma alvos $S \ge 10^{12}$ excedem a RAM de máquinas comuns. Quando tanto $n$ quanto $S$ são grandes (como $n = 40$ e $S = 10^{15}$), uma alternativa conhecida, não implementada neste trabalho, é o método **meet-in-the-middle** (HOROWITZ; SAHNI, 1974), que divide a entrada em duas metades, gera as somas de cada lado e busca pares que somem $S$. Ele decide o problema em tempo e espaço $O(2^{n/2})$, sem depender de $S$.
 
 # 5. Simulação e metodologia experimental
 
 ## Entradas, tamanhos e cenários
 
-No experimento principal, avaliaram-se seis tamanhos em progressão aproximadamente geométrica, $n \in \{8, 10, 12, 15, 18, 22\}$ (razões consecutivas entre $1{,}20$ e $1{,}25$), todos com alvo $S = 20n + 1$ ($161$ a $441$). Os tamanhos são pequenos porque a força bruta é exponencial, conforme permitido pelo enunciado (BEZERRA, 2026). Para cada $n$, há três cenários: **melhor caso**, com primeiro valor igual ao alvo ($v_0 = S$) e os demais $n - 1$ uniformes em $\{1, \dots, 39\}$; **pior caso**, com todos os $n$ valores pares sorteados como $2 \cdot U\{11, \dots, 20\}$ e alvo ímpar, garantindo ausência de solução; e **caso aleatório**, com $15$ instâncias distintas de $n$ valores uniformes em $\{1, \dots, 39\}$.
+No experimento principal, avaliaram-se seis tamanhos em progressão geométrica aproximada, $n \in \{8, 10, 12, 15, 18, 22\}$, com alvo $S = 20n + 1$ ($161$ a $441$); os tamanhos são pequenos devido ao custo exponencial da força bruta (BEZERRA, 2026). Para cada $n$, testaram-se três cenários: melhor caso, com $v_0 = S$ e demais valores uniformes em $\{1, \dots, 39\}$; pior caso, com $n$ valores pares em $2 \cdot U\{11, \dots, 20\}$ e alvo ímpar, garantindo ausência de solução; e caso aleatório, com $15$ instâncias de valores uniformes em $\{1, \dots, 39\}$.
 
-Para isolar o efeito de $S$, um segundo experimento (`scripts/variar_alvo.py`) fixa $n = 13$ em uma lista de pior caso e varia o alvo em oito níveis em que $S - 1$ quadruplica a cada passo: $S = 4^k + 1$ para $k = 3, \dots, 10$ ($65$ a $1.048.577$), todos sem solução. Todas as instâncias são geradas por `scripts/gerar_entradas.py` com semente fixa `20261123` (e sementes derivadas para as famílias auxiliares) e salvas em `dados/*.tsv`.
+Para isolar o efeito de $S$, um segundo experimento (`scripts/variar_alvo.py`) fixa $n = 13$ em uma instância de pior caso e varia $S = 4^k + 1$ para $k = 3, \dots, 10$ ($65$ a $1.048.577$), todas sem solução. Todas as entradas são geradas por `scripts/gerar_entradas.py` com semente fixa `20261123` (e sementes derivadas para as famílias auxiliares) e salvas em `dados/*.tsv`.
 
 ## Mesmas entradas e repetições
 
-As quatro implementações (dois algoritmos em duas linguagens) leem os mesmos arquivos TSV (`dados/entradas.tsv`, `dados/entradas_alvo.tsv` e `dados/entradas_memoria.tsv`) via `src/executar.py` e `src/subset_sum.cpp`.
-
-Cada grupo reúne $15$ amostras, reportadas como média e desvio-padrão amostral. Nos cenários de melhor caso, pior caso e variação de alvo (e nas varreduras de memória), a mesma instância é medida $15$ vezes. No cenário aleatório, as $15$ amostras correspondem a $15$ instâncias distintas medidas uma vez cada; logo, seu desvio-padrão mistura a variação entre instâncias com o ruído de cronometragem.
+As quatro implementações (dois algoritmos em Python e C++) leem exatamente os mesmos arquivos TSV via `src/executar.py` e `src/subset_sum.cpp`. Cada grupo reúne $15$ amostras, resumidas por média e desvio-padrão amostral: nos cenários de melhor caso, pior caso, variação de alvo e memória, a mesma instância é medida $15$ vezes; no cenário aleatório, medem-se $15$ instâncias distintas uma vez cada.
 
 ## O que é medido e aquecimento
 
-A região cronometrada compreende as chamadas ao algoritmo (incluindo a alocação de sua estrutura auxiliar, `mascara` ou `alcancavel`) mais o pequeno custo do laço de medição; leitura de arquivo, conversão, geração de entradas e escrita de resultados ficam fora. Usam-se `time.perf_counter_ns` em Python (resolução nominal de $41{,}7\text{ ns}$) e `std::chrono::steady_clock` em C++ (chamada via ponteiro `volatile`). Para cada instância, dobra-se o número de chamadas consecutivas até que um lote dure pelo menos $1\text{ ms}$; esse lote de calibração é descartado e coletam-se $15$ novas amostras com o tamanho de lote encontrado, registrando o tempo do lote dividido pelo número de chamadas (coluna `chamadas` do CSV). Há uma única exceção: se uma única chamada já durar $1\text{ s}$ ou mais, ela é aproveitada como a primeira amostra (o que ocorre na força bruta em Python para $n = 22$ e na busca do limite de $60\text{ s}$).
-
-Antes de medir cada algoritmo, ambos os executores realizam um aquecimento de $500\text{ ms}$ em um laço de chamadas sobre uma instância diminuta ($V = [3, 5, 9]$, $S = 8$), antes da calibração de lote e das amostras registradas.
+Cronometram-se apenas as chamadas ao algoritmo (incluindo a alocação de `mascara` ou `alcancavel`) e o laço de medição; leitura, conversão e escrita ficam fora. Usam-se `time.perf_counter_ns` em Python e `std::chrono::steady_clock` em C++. Antes de medir cada algoritmo, executa-se um aquecimento de $500\text{ ms}$. Em seguida, dobra-se o número de chamadas por lote até atingir pelo menos $1\text{ ms}$; o lote de calibração é descartado e coletam-se $15$ amostras com esse tamanho de lote, dividindo o tempo total pelo número de chamadas. Quando uma única chamada já dura ao menos $1\text{ s}$, ela serve diretamente como primeira amostra.
 
 ## Ambiente de execução
+
+A Tabela 1 resume o ambiente utilizado nas medições.
 
 | Componente | Especificação |
 | --- | --- |
@@ -228,7 +201,7 @@ Antes de medir cada algoritmo, ambos os executores realizam um aquecimento de $5
 | Memória RAM | 16 GiB (17.179.869.184 bytes) |
 | Sistema operacional | macOS 26.6.2 (arm64, 64 bits) |
 | Interpretador Python | CPython 3.11.9 (sem flags especiais) |
-| Compilador C++ | Apple clang 21.0.0 (`clang-2100.3.34.2`) |
+| Compilador C++ | Apple clang 21.0.0 |
 | Flags de compilação C++ | `-std=c++17 -O2 -DNDEBUG -Wall -Wextra -pedantic` |
 | Relógios | `time.perf_counter_ns` (Python) e `std::chrono::steady_clock` (C++) |
 
@@ -236,19 +209,19 @@ Antes de medir cada algoritmo, ambos os executores realizam um aquecimento de $5
 
 ## Corretude, teórico × medido e maior $n$ em 60 s
 
-A suíte `tests/testar.py` executa as quatro implementações em $172$ entradas ($12$ casos de borda fixos e $160$ aleatórios), compara todas as $688$ decisões com um oráculo independente por enumeração de combinações e verifica a rejeição de valores negativos nas duas interfaces. Além disso, os três experimentos em lote conferem cada resposta gravada contra um segundo oráculo independente baseado em *bitset*: $1.080$ leituras no experimento principal, $480$ no de variação de alvo e $900$ no de memória.
+A suíte `tests/testar.py` valida as quatro implementações em $172$ entradas ($12$ casos de borda e $160$ aleatórias), comparando as $688$ decisões com um oráculo independente e verificando a rejeição de entradas negativas. Nos experimentos em lote, cada resposta gravada também é conferida contra um segundo oráculo independente por *bitset* ($1.080$ leituras no experimento principal, $480$ na variação de alvo e $900$ em memória).
 
-A comparação teórico × medido usa a razão $T / f$, com $f = n \cdot 2^n$ na força bruta e $f = (n + 1)(S + 1)$ na PD, além da curva teórica $c \cdot f(n)$ traçada sobre os pontos medidos. Para o limite de $60\text{ s}$, `scripts/limite.py` executa a família de pior caso uma vez por $n$, partindo de uma estimativa extrapolada de $n = 22$, e encerra qualquer processo que ultrapasse $61{,}5\text{ s}$. Esse script não utiliza o oráculo por *bitset*, mas verifica que toda execução concluída responde `NÃO`, o que é garantido pela paridade (itens pares e alvo ímpar).
+O confronto teórico × medido usa a razão $T / f$, com $f = n \cdot 2^n$ na força bruta e $f = (n + 1)(S + 1)$ na PD, além das curvas $c \cdot f(n)$. Para o limite de $60\text{ s}$, `scripts/limite.py` executa a família de pior caso uma vez por $n$, interrompendo execuções acima de $61{,}5\text{ s}$ e confirmando resposta `NÃO` em todas as concluídas.
 
 ## Memória (bônus)
 
-A memória auxiliar é medida em passagem separada (`scripts/medir_memoria.py`) para não interferir nos tempos. Em Python, `tracemalloc` é iniciado imediatamente antes de cada chamada e interrompido logo após o retorno, registrando o pico de alocação rastreada durante a chamada. Em C++, os dois vetores auxiliares (`mascara` e `alcancavel`) utilizam um alocador contador personalizado que registra o pico de bytes solicitados por esses vetores durante a chamada; o mesmo alocador permanece ativo durante a cronometragem, acrescentando duas atualizações de inteiros por chamada. Há duas varreduras com $15$ amostras por ponto: $n = 16$ a $65.536$ (potências de $4$) com $S = 100$ fixo e $v_0 = S$ (para que a força bruta pare na segunda máscara após alocar sua máscara de $n$ bytes); e $S = 65$ a $1.048.577$ com $n = 13$ fixo.
+A memória auxiliar é medida em passagem separada (`scripts/medir_memoria.py`) para não afetar os tempos. Em Python, `tracemalloc` registra o pico de alocação rastreada durante cada chamada; em C++, um alocador contador em `mascara` e `alcancavel` registra o pico de bytes solicitados pelos vetores auxiliares. Realizam-se duas varreduras com $15$ amostras por ponto: $n$ de $16$ a $65.536$ (potências de $4$) com $S = 100$ e $v_0 = S$, e $S$ de $65$ a $1.048.577$ com $n = 13$ fixo.
 
 # 6. Gráficos e tabelas de comparação
 
 ## Teórico × medido
 
-As figuras e tabelas a seguir confrontam os tempos medidos no pior caso com as funções teóricas $f(n) = n \cdot 2^n$ (força bruta) e $f(n, S) = (n + 1)(S + 1)$ (PD).
+A Figura 1 e a Tabela 2 apresentam os tempos no pior caso ($S = 20n + 1$); a Figura 2 e a Tabela 3 mostram a razão $T / f$ para $f(n) = n \cdot 2^n$ na força bruta e $f(n, S) = (n + 1)(S + 1)$ na PD, e a Tabela 4 detalha o custo por máscara $T / 2^n$.
 
 ![Tempo médio por chamada no pior caso, curva teórica $c \cdot f(n)$ e maior $n$ viável em 60 s.](../resultados/graficos/tempos_pior_caso.png){width=92%}
 
@@ -289,18 +262,19 @@ As figuras e tabelas a seguir confrontam os tempos medidos no pior caso com as f
 
 : Custo por máscara no pior caso da força bruta, $T / 2^n$ em ns (as duas últimas linhas vêm da busca do limite de 60 s, com uma execução).
 
-O comportamento observado em cada uma das quatro curvas resume-se a seguir:
+Na PD em C++, a razão $T / ((n + 1)(S + 1))$ mantém-se entre $0{,}41$ e $0{,}48\text{ ns}$ por passo na Tabela 3 e estabiliza em $0{,}35\text{ ns}$ a partir de $S = 16.385$ na Tabela 6, confirmando $\Theta(n \cdot S)$.
 
-- **PD em C++:** a razão $T / ((n + 1)(S + 1))$ permanece em uma faixa estreita entre $0{,}41$ e $0{,}48\text{ ns}$ por passo no experimento principal e entre $0{,}35$ e $0{,}43\text{ ns}$ por passo na varredura de alvo (estabilizando em $0{,}35\text{ ns}$ a partir de $S = 16.385$ até $S = 1.048.577$), compatível com $\Theta(n \cdot S)$.
-- **PD em Python:** a razão sobe de $15{,}3\text{ ns}$ ($n = 8$) para $21{,}8\text{ ns}$ ($n = 22$) no experimento principal e, com $n = 13$ fixo, passa de $13{,}3\text{ ns}$ ($S = 65$) e $17{,}1\text{ ns}$ ($S = 257$) para $21{,}7\text{ ns}$ ($S = 1.025$), formando um patamar entre $22{,}4$ e $23{,}5\text{ ns}$ por passo de $S = 4.097$ até $S = 1.048.577$ ($22{,}4\text{ ns}$ nos dois maiores alvos). Uma explicação possível para parte dessa diferença é o curto-circuito da guarda `soma >= valor and alcancavel[soma - valor]`: para cada item de valor $v \le S$, exatamente $v$ das $S + 1$ iterações pulam a subtração e a leitura, e essa fração diminui conforme $S$ cresce. Como o experimento mede apenas o tempo total, esse mecanismo não é isolado diretamente.
-- **Força bruta em Python:** a razão $T / (n \cdot 2^n)$ decresce gradualmente de $36{,}3$ ($n = 8$) para $23{,}4\text{ ns}$ por passo ($n = 22$). Na tabela de custo por máscara, $T / 2^n$ cresce de $290$ para $516\text{ ns}$ entre $n = 8$ e $n = 22$, e o ajuste por mínimos quadrados nessa faixa é $T / 2^n \approx 153 + 16{,}6\,n\text{ ns}$, que prevê $585\text{ ns}$ em $n = 26$, diante dos $606\text{ ns}$ medidos na busca do limite. Esse ajuste descreve a faixa observada e é compatível com um custo fixo $a$ por máscara somado ao custo $b \cdot n$ de percorrer as $n$ posições, fazendo $T / (n \cdot 2^n) = b + a / n$ decrescer em direção a $b$.
-- **Força bruta em C++:** o custo por máscara $T / 2^n$ sobe gradualmente de $6{,}16\text{ ns}$ ($n = 8$), $7{,}66\text{ ns}$ ($n = 10$) e $12{,}7\text{ ns}$ ($n = 12$) até $30{,}6\text{ ns}$ ($n = 15$), e a partir daí permanece entre $30{,}6$ e $36{,}9\text{ ns}$ até $n = 30$ ($34{,}0\text{ ns}$ em $n = 18$, $34{,}6\text{ ns}$ em $n = 22$ e $36{,}9\text{ ns}$ em $n = 30$), enquanto $T / (n \cdot 2^n)$ cai de $2{,}04$ ($n = 15$) para $1{,}89$ ($n = 18$) e $1{,}57\text{ ns}$ ($n = 22$). O comprimento da sequência de desvios e sua repetição nos lotes pequenos são explicações possíveis que o experimento de tempo não isola.
+Na PD em Python, a razão sobe de $15{,}3$ para $21{,}8\text{ ns}$ na Tabela 3 e de $13{,}3\text{ ns}$ ($S = 65$) até um patamar entre $22{,}4$ e $23{,}5\text{ ns}$ a partir de $S = 4.097$ na Tabela 6. Atribuímos essa subida inicial ao curto-circuito da guarda `soma >= valor and alcancavel[soma - valor]`: para cada item $v \le S$, exatamente $v$ das $S + 1$ iterações pulam a leitura do vetor, fração que encolhe conforme $S$ cresce.
 
-As medições são consistentes com $\Theta(n \cdot 2^n)$ e $\Theta(n \cdot S)$.
+Na força bruta em Python, $T / (n \cdot 2^n)$ decresce de $36{,}3$ para $23{,}4\text{ ns}$ na Tabela 3, enquanto o custo por máscara na Tabela 4 sobe linearmente de $290$ ($n = 8$) para $516\text{ ns}$ ($n = 22$). O ajuste linear $T / 2^n \approx 153 + 16{,}6\,n\text{ ns}$ nessa faixa (prevendo $585\text{ ns}$ frente aos $606\text{ ns}$ medidos em $n = 26$) reflete um custo fixo $a$ por máscara somado ao custo $b \cdot n$ da varredura, fazendo $T / (n \cdot 2^n) = b + a / n$ convergir para $b$.
+
+Na força bruta em C++, o custo por máscara na Tabela 4 salta de $12{,}7\text{ ns}$ ($n = 12$) para $30{,}6\text{ ns}$ ($n = 15$) e depois permanece entre $30{,}6$ e $36{,}9\text{ ns}$ até $n = 30$, enquanto $T / (n \cdot 2^n)$ cai de $2{,}04$ para $1{,}57\text{ ns}$ entre $n = 15$ e $n = 22$ na Tabela 3. Atribuímos o salto entre $n = 12$ e $n = 15$ ao preditor de desvios do processador, que consegue memorizar sequências curtas de máscaras nos lotes pequenos e satura quando $2^n$ cresce.
+
+Em conjunto, as medições das Figuras 1 e 2 confirmam as ordens $\Theta(n \cdot 2^n)$ e $\Theta(n \cdot S)$.
 
 ## Algoritmo × algoritmo
 
-No pior caso com $S = 20n + 1$ (gráfico de pior caso e tabela de comparações abaixo), a força bruta já é $3{,}33$ vezes mais lenta que a PD em Python e $2{,}64$ vezes em C++ no menor tamanho ($n = 8$). A diferença dispara exponencialmente e alcança $9.756$ vezes em Python ($2{,}16\text{ s}$ contra $222\text{ }\mu\text{s}$) e $33.662$ vezes em C++ ($145\text{ ms}$ contra $4{,}32\text{ }\mu\text{s}$) em $n = 22$.
+No pior caso com $S = 20n + 1$ (Figura 1, Tabela 2 e Tabela 5), a força bruta já parte $3{,}33$ vezes mais lenta que a PD em Python e $2{,}64$ vezes em C++ em $n = 8$. A razão cresce exponencialmente e atinge $9.756$ vezes em Python ($2{,}16\text{ s}$ contra $222\text{ }\mu\text{s}$) e $33.662$ vezes em C++ ($145\text{ ms}$ contra $4{,}32\text{ }\mu\text{s}$) em $n = 22$.
 
 | n | Força bruta: Python / C++ | PD: Python / C++ | Python: força bruta / PD | C++: força bruta / PD |
 |---:|---:|---:|---:|---:|
@@ -313,7 +287,7 @@ No pior caso com $S = 20n + 1$ (gráfico de pior caso e tabela de comparações 
 
 : Comparações no pior caso: quantas vezes um tempo médio é maior que o outro.
 
-Quando o alvo $S$ cresce de forma independente de $n$, a vantagem se inverte, como mostra o experimento com $n = 13$ fixo ($2^{13} = 8.192$).
+Quando o alvo $S$ cresce de forma independente de $n$, a vantagem se inverte, como mostram a Figura 3 e a Tabela 6 para $n = 13$ fixo ($2^{13} = 8.192$).
 
 ![Efeito do alvo $S$ sobre o tempo médio por chamada com $n = 13$ fixo e instância sem solução.](../resultados/graficos/efeito_do_alvo.png){width=92%}
 
@@ -330,17 +304,15 @@ Quando o alvo $S$ cresce de forma independente de $n$, a vantagem se inverte, co
 
 : Efeito do alvo com n = 13 fixo e instância sem solução (média ± desvio padrão amostral, 15 amostras).
 
-As curvas da força bruta ficam praticamente horizontais em toda a faixa medida (entre $3{,}05$ e $3{,}08\text{ ms}$ em Python e entre $130$ e $144\text{ }\mu\text{s}$ em C++), enquanto a PD cresce com $S$: para os alvos maiores, multiplicar $S$ por cerca de quatro multiplica o tempo da PD por cerca de quatro nas duas linguagens (em Python, os primeiros intervalos crescem mais rápido, cerca de cinco vezes de $S = 65$ para $257$ e de $257$ para $1.025$). O cruzamento ocorre entre $S = 4.097$ ($1{,}35\text{ ms}$ na PD contra $3{,}06\text{ ms}$ na força bruta) e $S = 16.385$ ($5{,}14\text{ ms}$ contra $3{,}05\text{ ms}$) em Python, e entre $S = 16.385$ ($81{,}4\text{ }\mu\text{s}$ contra $132\text{ }\mu\text{s}$) e $S = 65.537$ ($325\text{ }\mu\text{s}$ contra $142\text{ }\mu\text{s}$) em C++. Os intervalos refletem a regra $2^n$ versus $S$ da Seção 4 ($2^{13} = 8.192$), deslocados pelas constantes de cada implementação (em C++, o passo da PD é bem mais rápido que o da força bruta, empurrando a inversão para alvos maiores). No maior alvo ($S = 1.048.577$), a força bruta é cerca de $107$ vezes mais rápida em Python ($3{,}06\text{ ms}$ contra $328\text{ ms}$) e cerca de $40$ vezes mais rápida em C++ ($130\text{ }\mu\text{s}$ contra $5{,}15\text{ ms}$).
+Na Figura 3 e na Tabela 6, a força bruta mantém-se estável entre $3{,}05$ e $3{,}08\text{ ms}$ em Python e entre $130$ e $144\text{ }\mu\text{s}$ em C++, enquanto a PD cresce linearmente com $S$, quadruplicando o tempo a cada passo nos alvos maiores. A inversão ocorre entre $S = 4.097$ e $S = 16.385$ em Python e entre $S = 16.385$ e $S = 65.537$ em C++, acompanhando a fronteira $2^{13} = 8.192$ deslocada pelas constantes de cada linguagem. Em $S = 1.048.577$, a força bruta é cerca de $107$ vezes mais rápida em Python ($3{,}06\text{ ms}$ contra $328\text{ ms}$) e cerca de $40$ vezes em C++ ($130\text{ }\mu\text{s}$ contra $5{,}15\text{ ms}$).
 
 ## Linguagem × linguagem
 
-Na tabela de comparações do pior caso, C++ é de $36{,}0$ a $51{,}3$ vezes mais rápido que Python na PD; o fator cresce com $n$ enquanto a razão medida da PD em Python sobe de $15{,}3$ para $21{,}8\text{ ns}$ por passo e a de C++ permanece entre $0{,}41$ e $0{,}48\text{ ns}$. Na força bruta, C++ é $47{,}1$, $41{,}2$ e $27{,}7$ vezes mais rápido para $n = 8, 10, 12$, passando a $13{,}0$, $13{,}6$ e $14{,}9$ vezes para $n = 15, 18, 22$, acompanhando o aumento do custo por máscara em C++.
-
-O ponto central é que ambas as linguagens têm a mesma ordem assintótica para cada algoritmo, enquanto a razão entre os tempos medidos varia com o tamanho da entrada ($36{,}0$ a $51{,}3$ vezes na PD e $47{,}1$ até $13{,}0\text{--}14{,}9$ vezes na força bruta). Como consequência, em $n = 15$ no pior caso, a PD em Python ($91{,}4\text{ }\mu\text{s}$) já é cerca de $11$ vezes mais rápida que a força bruta compilada em C++ ($1{,}00\text{ ms}$), e em $n = 22$ supera a força bruta em C++ por cerca de $656$ vezes ($222\text{ }\mu\text{s}$ contra $145\text{ ms}$).
+Na Tabela 5, C++ supera Python por um fator de $36{,}0$ a $51{,}3$ na PD, crescendo conforme a razão por passo em Python sobe na Tabela 3. Na força bruta, a vantagem de C++ cai de $47{,}1$ vezes em $n = 8$ para a faixa de $13{,}0$ a $14{,}9$ vezes a partir de $n = 15$, acompanhando o salto do custo por máscara em C++ na Tabela 4. Mesmo com esse ganho da compilação, a escolha do algoritmo domina: na Tabela 2, a PD em Python já supera a força bruta em C++ por cerca de $11$ vezes em $n = 15$ ($91{,}4\text{ }\mu\text{s}$ contra $1{,}00\text{ ms}$) e por cerca de $656$ vezes em $n = 22$ ($222\text{ }\mu\text{s}$ contra $145\text{ ms}$).
 
 ## Melhor caso, pior caso e caso aleatório
 
-O comportamento nos três cenários em cada linguagem aparece na figura e nas três tabelas abaixo.
+A Figura 4 e as Tabelas 7, 8 e 9 comparam os três cenários nas duas linguagens.
 
 ![Comparação dos cenários de melhor caso, aleatório e pior caso em Python e C++.](../resultados/graficos/cenarios.png){width=92%}
 
@@ -377,7 +349,7 @@ O comportamento nos três cenários em cada linguagem aparece na figura e nas tr
 
 : Instâncias do cenário aleatório por tamanho: quantas têm soma total abaixo do alvo e quantas não têm solução.
 
-No melhor caso, a força bruta cresce apenas linearmente ($\Theta(n)$), permanecendo abaixo de $1\text{ }\mu\text{s}$ em Python ($473$ a $756\text{ ns}$) e na faixa de dezenas de nanossegundos em C++ ($24{,}1$ a $37{,}5\text{ ns}$). No cenário aleatório, a força bruta acompanha de perto a curva exponencial do pior caso, mas com desvio-padrão elevado (como $1{,}48 \pm 0{,}74\text{ s}$ em Python e $101 \pm 50{,}8\text{ ms}$ em C++ para $n = 22$). O limite inferior de $1/2$ da Seção 3 é uma probabilidade para um novo sorteio, não uma contagem garantida na amostra de $15$ instâncias; na tabela acima, das $15$ instâncias sorteadas por tamanho, tiveram soma total abaixo de $S$ e ausência de solução, respectivamente, $8$ e $13$ ($n = 8$), $7$ e $11$ ($n = 10$), $10$ e $12$ ($n = 12$), $8$ e $9$ ($n = 15$), $8$ e $9$ ($n = 18$) e $6$ e $7$ ($n = 22$). As instâncias sem solução percorrem todas as $2^n$ máscaras, enquanto as demais param em pontos diferentes da enumeração, o que explica o desvio-padrão elevado. Já a PD apresenta médias próximas nos três cenários ($222$ a $241\text{ }\mu\text{s}$ em Python e $4{,}08$ a $4{,}36\text{ }\mu\text{s}$ em C++ em $n = 22$), resultado compatível com o mesmo número de iterações.
+Na Figura 4 e na Tabela 7, a força bruta cresce linearmente no melhor caso ($\Theta(n)$), ficando entre $473$ e $756\text{ ns}$ em Python e entre $24{,}1$ e $37{,}5\text{ ns}$ em C++. No cenário aleatório (Tabela 8), seu tempo acompanha a curva exponencial do pior caso com desvio-padrão alto, como $1{,}48 \pm 0{,}74\text{ s}$ em Python e $101 \pm 50{,}8\text{ ms}$ em C++ em $n = 22$. A Tabela 9 explica essa dispersão: das $15$ instâncias por tamanho, entre $7$ ($n = 22$) e $13$ ($n = 8$) não têm solução e percorrem todas as $2^n$ máscaras, enquanto as demais encerram ao encontrar a primeira combinação válida. Já a PD mantém médias próximas nos três cenários ($222$ a $241\text{ }\mu\text{s}$ em Python e $4{,}08$ a $4{,}36\text{ }\mu\text{s}$ em C++ em $n = 22$).
 
 ## Maior $n$ viável em 60 s
 
@@ -388,11 +360,11 @@ No melhor caso, a força bruta cresce apenas linearmente ($\Theta(n)$), permanec
 
 : Maior n da força bruta que termina em até 60 s no pior caso (uma execução por n).
 
-Os marcadores vazados logo abaixo da reta horizontal de $60\text{ s}$ no gráfico de pior caso mostram a fronteira medida: Python concluiu $n = 26$ em $40{,}6\text{ s}$ e teve $n = 27$ interrompido pelo prazo externo de $61{,}5\text{ s}$; C++ concluiu $n = 30$ em $39{,}6\text{ s}$ e teve $n = 31$ interrompido pelo mesmo prazo de $61{,}5\text{ s}$, sem que nenhum dos dois tamanhos fora do limite fosse cronometrado até o fim. As curvas pontilhadas são referências teóricas $c \cdot n \cdot 2^n$ ajustadas à média em $n = 22$. Nessa referência, avançar de $n$ para $n + 1$ multiplica o custo por $2(n + 1)/n$, sempre mais que o dobro; assim, dentro do orçamento de $60\text{ s}$, C++ permitiu quatro itens a mais que Python.
+Na Figura 1 e na Tabela 10, a força bruta concluiu até $n = 26$ em Python ($40{,}6\text{ s}$) e $n = 30$ em C++ ($39{,}6\text{ s}$), com $n = 27$ e $n = 31$ interrompidos no prazo de $61{,}5\text{ s}$. Como avançar de $n$ para $n + 1$ mais que dobra o número de passos ($2(n + 1)/n$), a vantagem de C++ traduz-se em apenas quatro itens adicionais no orçamento de $60\text{ s}$.
 
 ## Memória medida × espaço teórico (bônus)
 
-Os picos de memória auxiliar medidos nas duas varreduras são compatíveis com os limites espaciais $\Theta(n)$ e $\Theta(S + 1)$ derivados na Seção 2.
+A Figura 5 e as Tabelas 11 e 12 confrontam o pico de memória auxiliar medido com os limites $\Theta(n)$ e $\Theta(S + 1)$ da Seção 2.
 
 ![Pico de memória auxiliar ao variar $n$ (com $S = 100$ fixo) e ao variar $S$ (com $n = 13$ fixo), comparado às curvas teóricas de $n$ bytes e $S + 1$ bytes.](../resultados/graficos/memoria.png){width=92%}
 
@@ -421,44 +393,37 @@ Os picos de memória auxiliar medidos nas duas varreduras são compatíveis com 
 
 : Pico de memória auxiliar em bytes ao variar S, com n = 13 fixo (valores idênticos nas 15 repetições).
 
-As leituras de memória foram idênticas nas $15$ repetições em ambas as linguagens. Em C++, o alocador contador nos dois vetores auxiliares registra o pico de bytes solicitados por `mascara` e `alcancavel`, coincidindo com $n$ bytes na força bruta ($16$ a $65.536$ bytes ao variar $n$, e $13$ bytes constantes ao variar $S$) e com $S + 1$ bytes na PD ($101$ bytes constantes ao variar $n$, e $66$ a $1.048.578$ bytes ao variar $S$). Em Python, o pico de alocação rastreada por `tracemalloc` durante cada chamada acompanha o mesmo crescimento acrescido de uma diferença quase constante acima do tamanho do vetor, tendo objetos e temporários do interpretador como fonte provável: $+217$ bytes ($n \le 256$) a $+245$ bytes ($n \ge 1.024$) na força bruta ao variar $n$ ($+281$ bytes constantes na varredura de $S$, totalizando $294$ bytes contra $13$ teóricos), e $+201$ bytes ($S = 65$ e $S = 100$) a $+233$ bytes ($S \ge 257$) na PD ($302$ bytes constantes contra $101$ ao variar $n$, e $1.048.811$ contra $1.048.578$ em $S = 1.048.577$). Por isso, no gráfico de memória, as curvas de Python começam próximas de $300$ bytes nos tamanhos pequenos e aproximam-se das retas teóricas à medida que o vetor principal domina a alocação. As duas varreduras mostram que a memória da força bruta cresceu apenas com $n$ e a da PD apenas com $S$, resumindo o compromisso central do projeto: a PD reduz o tempo exponencial em $n$ ao custo de memória proporcional ao alvo $S$.
+As leituras foram idênticas nas $15$ repetições. Em C++, os picos registrados pelo alocador coincidem exatamente com $n$ bytes na força bruta ($16$ a $65.536$ bytes na Tabela 11; $13$ bytes na Tabela 12) e $S + 1$ bytes na PD ($101$ bytes na Tabela 11; $66$ a $1.048.578$ bytes na Tabela 12). Em Python, o `tracemalloc` acompanha o mesmo crescimento linear com uma sobrecarga quase constante de $201$ a $281$ bytes de objetos do interpretador. Por isso, na Figura 5 as curvas de Python partem perto de $300$ bytes e convergem para as retas teóricas quando o vetor principal domina (como $1.048.811$ contra $1.048.578$ bytes em $S = 1.048.577$). Assim, a memória da força bruta depende apenas de $n$ e a da PD apenas de $S$, confirmando o compromisso central entre tempo exponencial em $n$ e espaço proporcional a $S$.
 
 # 7. Reflexão sobre P e NP
 
 ## Pertencimento a P e NP
 
-Respondendo às questões do enunciado (BEZERRA, 2026): o Subconjunto Soma já é um **problema de decisão** e **pertence à classe NP**. Porém, **não se sabe se pertence à classe P**: por ser **NP-completo** (KARP, 1972; GAREY; JOHNSON, 1979), pertence a P se, e somente se, $\text{P} = \text{NP}$.
+O Subconjunto Soma é um problema de decisão e pertence à classe **NP**, mas não se sabe se pertence a **P**: por ser **NP-completo** (KARP, 1972; GAREY; JOHNSON, 1979), está em P se, e somente se, $\text{P} = \text{NP}$.
 
-- **Certificado e verificador polinomial:** para uma instância positiva $(V, S)$, o certificado é um vetor de $n$ bits marcando as posições escolhidas de $V$. O verificador percorre as $n$ posições, soma os valores marcados e testa igualdade com $S$. Se os valores e o alvo ocupam até $b$ bits, as somas parciais ocupam $O(b + \log(n + 1))$ bits, de modo que a verificação com soma binária usual custa $O(n \cdot (b + \log(n + 1)))$, polinomial no comprimento em bits da entrada (CORMEN et al., 2009, seção 34.2). Logo, $\text{Subconjunto Soma} \in \text{NP}$.
-- **Não contradição com a PD (NP-completude fraca):** o algoritmo de PD em $\Theta(n \cdot S)$ é pseudopolinomial porque depende do valor numérico de $S$, que pode ser exponencial no comprimento da entrada em binário; assim, sua existência não coloca o problema em P. Problemas NP-completos que admitem algoritmo pseudopolinomial são classificados como **fracamente NP-completos** (GAREY; JOHNSON, 1979; MIT OPENCOURSEWARE, 2020b).
+Para uma instância positiva $(V, S)$, o certificado é um vetor de $n$ bits indicando os índices escolhidos. O verificador percorre as $n$ posições, soma os valores marcados e compara o resultado com $S$. Se valores e alvo ocupam até $b$ bits, as somas parciais cabem em $O(b + \log(n + 1))$ bits e a verificação custa $O(n \cdot (b + \log(n + 1)))$, polinomial no comprimento da entrada (CORMEN et al., 2009, seção 34.2); logo, o problema está em NP.
+
+A existência da PD em $\Theta(n \cdot S)$ não contradiz a NP-completude porque o tempo é polinomial no valor numérico de $S$, não em seu número de bits ($\Theta(\log S)$). Problemas NP-completos que admitem algoritmo pseudopolinomial são ditos **fracamente NP-completos** (GAREY; JOHNSON, 1979; MIT OPENCOURSEWARE, 2020b).
 
 ## Problemas vizinhos e o que separa o tratável do difícil
 
-Os problemas vizinhos NP-completos associados ao Subconjunto Soma são (BEZERRA, 2026):
+Dois problemas NP-completos são vizinhos diretos do Subconjunto Soma (BEZERRA, 2026). Na **Partição** (*Partition*), dada uma lista $A = (a_0, \dots, a_{n-1})$ de inteiros não negativos, decide-se se os índices podem ser divididos em duas partes disjuntas de mesma soma ($\sum_{i \in I} a_i = \sum_{j \notin I} a_j$; KARP, 1972). Na **Mochila 0/1** (*0/1 Knapsack*, decisão), dados $n$ itens com pesos $w_i$ e valores $p_i$ inteiros não negativos, capacidade $C$ e limiar $K$, decide-se se existe $I$ com $\sum_{i \in I} w_i \le C$ e $\sum_{i \in I} p_i \ge K$; o Subconjunto Soma é o caso particular $p_i = w_i = v_i$ e $C = K = S$.
 
-- **Partição (*Partition*):** dada uma lista $A = (a_0, \dots, a_{n-1})$ de inteiros não negativos, decidir se seus índices podem ser divididos em duas partes disjuntas de mesma soma ($\sum_{i \in I} a_i = \sum_{j \notin I} a_j$). Figura entre os 21 problemas NP-completos de Karp (1972).
-- **Mochila 0/1 (*0/1 Knapsack*, decisão):** dados $n$ itens com pesos $w_i$ e valores $p_i$ inteiros não negativos, capacidade $C$ e limiar $K$, decidir se existe $I$ tal que $\sum_{i \in I} w_i \le C$ e $\sum_{i \in I} p_i \ge K$. O Subconjunto Soma é exatamente o caso particular da Mochila 0/1 em que $p_i = w_i = v_i$ para todo $i$ e $C = K = S$.
-
-**Fronteira entre tratabilidade e dificuldade:** quando $S$ é limitado por um polinômio em $n$, ou quando os números são dados em unário, a PD em $\Theta(n \cdot S)$ resolve o Subconjunto Soma em tempo polinomial; com números arbitrários codificados em binário, $S$ pode crescer exponencialmente no comprimento da entrada e a PD deixa de ser polinomial. Os problemas vizinhos compartilham esse comportamento: a Partição também admite a mesma PD com alvo $W / 2$ quando a soma total $W$ é par (respondendo `NÃO` se $W$ é ímpar), e a Mochila 0/1 admite PD pseudopolinomial na capacidade $C$. Em contraste com a integralidade da Mochila 0/1 (escolher cada item por inteiro ou não escolher), na **Mochila Fracionária** podem-se tomar frações contínuas de cada item: o algoritmo guloso pela razão valor/peso resolve a versão de otimização em $O(n \log n)$, e a versão de decisão pertence a **P** porque basta comparar o valor ótimo obtido com o limiar $K$ (CORMEN et al., 2009, seção 16.2).
+O que separa o tratável do difícil é a escala numérica e a restrição de integralidade. Quando $S$ é limitado por um polinômio em $n$ (ou dado em unário), a PD em $\Theta(n \cdot S)$ é polinomial; com inteiros arbitrários em binário, $S$ pode ser exponencial no tamanho da entrada. O mesmo ocorre na Partição (PD com alvo $W / 2$ quando a soma total $W$ é par, e resposta `NÃO` quando é ímpar) e na Mochila 0/1 (PD pseudopolinomial em $C$). Já na **Mochila Fracionária**, relaxar a integralidade permite tomar frações contínuas de cada item: o algoritmo guloso por razão valor/peso resolve a otimização em $O(n \log n)$ e coloca a versão de decisão em P, bastando comparar o ótimo com $K$ (CORMEN et al., 2009, seção 16.2).
 
 ## Redução polinomial: Subconjunto Soma para Partição
 
-Seguindo a construção de Karp (1972), dada uma instância $(V, S)$ de Subconjunto Soma com soma total $W = \sum_{i=0}^{n-1} v_i$:
-
-- **Caso de borda ($S > W$):** nenhum subconjunto de inteiros não negativos pode somar mais que $W$, logo responde-se `NÃO` diretamente (mapeando para uma instância negativa fixa de Partição, como $[1]$).
-- **Caso principal ($0 \le S \le W$):** anexam-se dois números estritamente positivos à lista nos índices $n$ (valor $S + 1$) e $n + 1$ (valor $W + 1 - S$), formando $A' = (a_0, \dots, a_{n+1})$ com $a_i = v_i$ para $0 \le i < n$:
+Seguindo Karp (1972), dada uma instância $(V, S)$ de Subconjunto Soma com soma total $W = \sum_{i=0}^{n-1} v_i$: se $S > W$, nenhum subconjunto alcança $S$, então mapeia-se diretamente para uma instância negativa fixa de Partição, como $[1]$. Para $0 \le S \le W$, anexam-se dois inteiros positivos nos índices $n$ e $n + 1$:
 
 $$A' = (v_0, \dots, v_{n-1},\; S + 1,\; W + 1 - S).$$
 
-A nova soma total é $W' = W + (S + 1) + (W + 1 - S) = 2W + 2$, exigindo que cada parte de uma partição dos índices $\{0, \dots, n + 1\}$ some exatamente $W + 1$.
+A soma total de $A'$ é $W' = 2W + 2$, logo cada parte de uma partição deve somar $W + 1$. Se existe $I \subseteq \{0, \dots, n - 1\}$ com $\sum_{i \in I} v_i = S$, então $I \cup \{n + 1\}$ soma $S + (W + 1 - S) = W + 1$, e o complementar $(\{0, \dots, n - 1\} \setminus I) \cup \{n\}$ soma $(W - S) + (S + 1) = W + 1$. Reciprocamente, se $A'$ admite partição em duas partes de soma $W + 1$, os índices $n$ e $n + 1$ não podem ficar juntos porque $(S + 1) + (W + 1 - S) = W + 2 > W + 1$ e todos os valores são não negativos; portanto, os índices originais no mesmo lado de $n + 1$ somam $(W + 1) - (W + 1 - S) = S$. A redução executa em tempo linear no número de bits da entrada.
 
-**Corretude:** se existe um conjunto de índices $I \subseteq \{0, \dots, n - 1\}$ com $\sum_{i \in I} v_i = S$, então $I \cup \{n + 1\}$ soma $S + (W + 1 - S) = W + 1$, e seu complementar $(\{0, \dots, n - 1\} \setminus I) \cup \{n\}$ (que contém o índice $n$) soma $(W - S) + (S + 1) = W + 1$. Reciprocamente, se $\{0, \dots, n + 1\}$ admite partição em dois conjuntos disjuntos de soma $W + 1$ cada, como os dois novos valores somam $(S + 1) + (W + 1 - S) = W + 2 > W + 1$ e todos os valores são não negativos, os índices $n$ e $n + 1$ caem obrigatoriamente em lados opostos; assim, os índices originais que acompanham $n + 1$ somam exatamente $(W + 1) - (W + 1 - S) = S$. A construção executa em tempo polinomial (linear no tamanho em bits da entrada).
-
-**Exemplo numérico:** para $V = [2, 3, 4, 5]$ ($W = 14$) e $S = 9$ (alcançável pelos índices $\{2, 3\}$, pois $4 + 5 = 9$), anexam-se $a_4 = S + 1 = 10$ e $a_5 = W + 1 - S = 6$, gerando $A' = [2, 3, 4, 5, 10, 6]$ com soma total $30$ e metade-alvo $15$. Como $a_4 + a_5 = 16 > 15$, os índices $4$ e $5$ ficam em lados opostos: os conjuntos de índices $\{2, 3, 5\}$ (valores $4, 5, 6$) e $\{0, 1, 4\}$ (valores $2, 3, 10$) somam $15$ cada, recuperando $I = \{2, 3\}$ com soma $9$. Para $S = 20 > 14$, o caso de borda devolve `NÃO` diretamente.
+Como exemplo, para $V = [2, 3, 4, 5]$ ($W = 14$) e $S = 9$, obtém-se $A' = [2, 3, 4, 5, 10, 6]$ com soma total $30$ e metade-alvo $15$. Como $10 + 6 = 16 > 15$, os índices $4$ e $5$ ficam em lados opostos: $\{2, 3, 5\}$ (valores $4, 5, 6$) e $\{0, 1, 4\}$ (valores $2, 3, 10$) somam $15$, recuperando $I = \{2, 3\}$ com soma $4 + 5 = 9$. Para $S = 20 > 14$, o caso de borda devolve uma instância negativa imediatamente.
 
 ## Algoritmo aproximado
 
-Para a versão de **otimização** do Subconjunto Soma (maximizar a soma obtida sem exceder $S$), existe um **FPTAS** (*Fully Polynomial-Time Approximation Scheme*): o algoritmo `APPROX-SUBSET-SUM` (CORMEN et al., 2009, seção 35.5), que mantém listas ordenadas de somas alcançáveis e aplica uma etapa de poda (*trimming*) para descartar somas próximas entre si dentro de um fator relativo ligado a $\varepsilon / (2n)$. Para qualquer $\varepsilon \in (0, 1)$, ele retorna em tempo polinomial em $n$, $1/\varepsilon$ e no número de bits da entrada o valor de uma soma viável de pelo menos $(1 - \varepsilon)$ vezes o ótimo; recuperar os índices escolhidos requer registrar de onde veio cada soma mantida. Essa família de esquemas tem origem no trabalho de Ibarra e Kim (1975), que apresentaram o primeiro FPTAS para a Mochila 0/1 e o Subconjunto Soma.
+Na versão de otimização (maximizar a soma alcançada sem exceder $S$), o algoritmo `APPROX-SUBSET-SUM` (CORMEN et al., 2009, seção 35.5) é um **FPTAS** (*Fully Polynomial-Time Approximation Scheme*): ele mantém listas ordenadas de somas alcançáveis e aplica uma poda (*trimming*) que descarta valores próximos dentro de um fator relativo ligado a $\varepsilon / (2n)$. Para qualquer $\varepsilon \in (0, 1)$, retorna em tempo polinomial em $n$, $1/\varepsilon$ e no número de bits da entrada uma soma viável de pelo menos $(1 - \varepsilon)$ vezes o ótimo (recuperar os índices exige guardar o predecessor de cada soma mantida). Essa família de esquemas deriva do primeiro FPTAS para Mochila 0/1 e Subconjunto Soma, proposto por Ibarra e Kim (1975).
 
 # 8. Contribuições
 
@@ -473,7 +438,7 @@ A divisão de tarefas da Equipe 4 foi a seguinte, com todos os quatro integrante
 
 # 9. Declaração de uso de IA
 
-Conforme as regras do projeto, declara-se que as ferramentas de inteligência artificial Claude, GPT e Gemini foram usadas como apoio para escrever e revisar o código, gerar os gráficos e organizar o pdf
+Conforme as regras do projeto, declara-se que as ferramentas de inteligência artificial Claude, GPT e Gemini foram usadas como apoio para escrever e revisar o código, gerar os gráficos, redigir e revisar o texto e organizar o pdf
 
 # Referências
 

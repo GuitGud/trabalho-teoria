@@ -7,8 +7,7 @@ author:
   - Theo Moura
   - Guilherme Rabelo
 date: "24 de novembro de 2026"
-abstract-title: "Repositório"
-abstract: "Código-fonte, entradas, medições e testes: <https://github.com/GuitGud/trabalho-teoria>"
+abstract: "Este trabalho analisa o Subconjunto Soma (decisão) comparando força bruta e programação dinâmica (PD) em Python e C++17. Mediram-se tempo em três cenários (melhor, pior e aleatório), efeito do alvo $S$, maior $n$ em 60 s e memória auxiliar. Em $n = 22$ no pior caso ($S = 441$), a PD é 9.756 vezes mais rápida em Python e 33.662 vezes em C++, e em 60 s a força bruta chega a $n = 26$ e $n = 30$; para alvos grandes, a força bruta vence porque tempo e memória da PD crescem com $S$. Pseudopolinomial em $S$, a PD não coloca o problema em P, mantendo-o fracamente NP-completo. Código-fonte, entradas, medições e testes: <https://github.com/GuitGud/trabalho-teoria>"
 lang: pt-BR
 papersize: a4
 geometry: margin=2.2cm
