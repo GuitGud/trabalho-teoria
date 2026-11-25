@@ -462,7 +462,7 @@ Para a versão de **otimização** do Subconjunto Soma (maximizar a soma obtida 
 
 # 8. Contribuições
 
-A divisão de tarefas da Equipe 4 seguiu `CONTRIBUICOES.md`, com todos os quatro integrantes preparando a apresentação oral:
+A divisão de tarefas da Equipe 4 foi a seguinte, com todos os quatro integrantes preparando a apresentação oral:
 
 | Integrante | Contribuições |
 | --- | --- |

@@ -14,10 +14,6 @@ O problema de decisão recebe uma lista de inteiros não negativos e um alvo e r
 
 Em força bruta com solução na primeira máscara possível, o melhor caso custa Θ(n + 1). A programação dinâmica visita toda a faixa de somas para cada item. Sua dependência do valor numérico de S caracteriza tempo pseudopolinomial.
 
-## Contribuições e validação
-
-As etapas atribuídas a cada integrante e os campos para registrar `VALIDADO` estão em [CONTRIBUICOES.md](CONTRIBUICOES.md). Cada integrante registra sua própria validação em commit.
-
 ## Relatório
 
 O relatório da entrega está em [relatorio/relatorio.pdf](relatorio/relatorio.pdf). O texto fica em `relatorio/relatorio.md` e o PDF é gerado com Pandoc e XeLaTeX:
