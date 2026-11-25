@@ -473,9 +473,7 @@ A divisão de tarefas da Equipe 4 foi a seguinte, com todos os quatro integrante
 
 # 9. Declaração de uso de IA
 
-Conforme as regras do projeto (BEZERRA, 2026), declara-se que as ferramentas de inteligência artificial Claude (Anthropic), GPT (OpenAI) e Gemini (Google) foram usadas como apoio para escrever e revisar o código, implementar as medições e os experimentos, gerar os gráficos e redigir e montar este relatório em PDF.
-
-Os integrantes revisaram integralmente o conteúdo e respondem por todo o material entregue.
+Conforme as regras do projeto, declara-se que as ferramentas de inteligência artificial Claude, GPT e Gemini foram usadas como apoio para escrever e revisar o código, gerar os gráficos e organizar o pdf
 
 # Referências
 
