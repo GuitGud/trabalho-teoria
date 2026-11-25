@@ -1,13 +1,13 @@
 {
-  "utc": "2026-11-23T19:35:23+00:00",
-  "sistema": "Windows-11-10.0.26300-SP0",
-  "arquitetura": "AMD64",
-  "cpu": "11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz",
-  "processadores_logicos": 12,
-  "ram_bytes": 16905977856,
-  "python": "CPython 3.12.14",
+  "utc": "2026-11-25T00:33:15+00:00",
+  "sistema": "macOS-26.6.2-arm64-arm-64bit",
+  "arquitetura": "arm64",
+  "cpu": "Apple M4",
+  "processadores_logicos": 10,
+  "ram_bytes": 17179869184,
+  "python": "CPython 3.11.9",
   "flags_python": [],
-  "compilador": "g++ (GCC) 11.2.0",
+  "compilador": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
   "flags_cpp": [
     "-std=c++17",
     "-O2",
@@ -18,18 +18,23 @@
   ],
   "relogios": {
     "python": "time.perf_counter_ns",
-    "cpp": "QueryPerformanceCounter",
-    "resolucao_nominal_python_ns": 100.0
+    "cpp": "std::chrono::steady_clock",
+    "resolucao_nominal_python_ns": 41.66666666666667
   },
   "n": [
-    3,
-    4,
-    6,
-    9,
-    13,
-    19
+    8,
+    10,
+    12,
+    15,
+    18,
+    22
   ],
   "semente": 20261123,
   "repeticoes_por_grupo": 15,
-  "aquecimento_por_algoritmo": 5
+  "aquecimento_ms_por_algoritmo": 500,
+  "lote_minimo_ns": 1000000,
+  "memoria": {
+    "python": "tracemalloc, pico de bytes alocados durante a chamada",
+    "cpp": "alocador contador nos vetores auxiliares, pico de bytes alocados durante a chamada"
+  }
 }

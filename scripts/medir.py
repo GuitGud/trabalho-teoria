@@ -39,6 +39,10 @@ def nome_cpu():
         for linha in proc.read_text(encoding="utf-8").splitlines():
             if linha.startswith("model name"):
                 return linha.split(":", 1)[1].strip()
+    if sys.platform == "darwin":
+        return subprocess.run(
+            ["sysctl", "-n", "machdep.cpu.brand_string"], check=True, capture_output=True, text=True,
+        ).stdout.strip()
     return platform.processor() or platform.machine()
 
 
@@ -88,7 +92,12 @@ def registrar_ambiente(caminho, compilador):
         "n": TAMANHOS,
         "semente": SEMENTE,
         "repeticoes_por_grupo": REPETICOES,
-        "aquecimento_por_algoritmo": 5,
+        "aquecimento_ms_por_algoritmo": 500,
+        "lote_minimo_ns": 1_000_000,
+        "memoria": {
+            "python": "tracemalloc, pico de bytes alocados durante a chamada",
+            "cpp": "alocador contador nos vetores auxiliares, pico de bytes alocados durante a chamada",
+        },
     }
     caminho.write_text(json.dumps(ambiente, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
@@ -112,10 +121,12 @@ def verificar_respostas(dados, casos):
     esperadas = {}
     for identificador, _, alvo, repeticoes, valores in casos:
         # Oráculo independente baseado em operações sobre um conjunto de bits.
+        faixa = (1 << (alvo + 1)) - 1
         somas = 1
         for valor in valores:
-            somas |= somas << valor
-        resultado = (somas >> alvo) & 1
+            if valor <= alvo:
+                somas = (somas | somas << valor) & faixa
+        resultado = somas >> alvo
         for algoritmo in ("forca_bruta", "pd"):
             for repeticao in range(1, repeticoes + 1):
                 esperadas[(identificador, algoritmo, repeticao)] = resultado
@@ -126,7 +137,7 @@ def verificar_respostas(dados, casos):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--cxx", default=os.getenv("CXX", "g++"), help="executável GCC/G++")
+    parser.add_argument("--cxx", default=os.getenv("CXX", "g++"), help="compilador C++17 (GCC ou Clang)")
     parser.add_argument("--dados", type=Path, default=RAIZ / "dados")
     parser.add_argument("--saida", type=Path, default=RAIZ / "resultados")
     args = parser.parse_args()

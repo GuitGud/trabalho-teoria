@@ -28,8 +28,8 @@ Cada integrante deve conferir as etapas atribuídas ao seu nome, escrever `VALID
 | --- | --- | --- |
 | Dados e testes | Semente 20261123, tamanhos das entradas, 1.080 medições principais e 480 com tamanho fixo. | |
 | Reprodução | Rode `python scripts/medir.py` e `python scripts/variar_alvo.py` em uma cópia e compare as respostas. | |
-| Tabelas e gráficos | Recalcule média e desvio amostral para um grupo com n = 19 e confira o relatório e o slide 7. | |
-| Fronteira de 60 segundos | Confira em `resultados/limite.csv` os limites de 25 itens em Python e 29 em C++ e as sondagens seguintes. | |
+| Tabelas e gráficos | Recalcule média e desvio amostral para um grupo com n = 22 e confira o relatório e o slide 7. | |
+| Fronteira de 60 segundos | Confira em `resultados/limite.csv` os limites de 26 itens em Python e 30 em C++ e as sondagens seguintes. | |
 | Apresentação | Ensaio dos slides 6 a 8, previstos para 2 min 6 s. | |
 
 ## Guilherme Rabelo · Complexidade e entrega

@@ -5,11 +5,8 @@ import os
 import subprocess
 from pathlib import Path
 
-from gerar_entradas import RAIZ, REPETICOES, caso_limite, escrever_tsv
+from gerar_entradas import N_ALVO, RAIZ, casos_alvo, escrever_tsv
 from medir import PYTHON, compilar, ler_csv, verificar_respostas
-
-N = 13
-ALVOS = (65, 129, 257, 513, 1025, 2049, 4097, 8193)
 
 
 def main():
@@ -20,8 +17,7 @@ def main():
     args = parser.parse_args()
     args.saida.mkdir(parents=True, exist_ok=True)
     entradas = args.dados / "entradas_alvo.tsv"
-    valores = caso_limite(N)[4]
-    casos = [(f"alvo-{alvo}", "variar_alvo", alvo, REPETICOES, valores) for alvo in ALVOS]
+    casos = list(casos_alvo())
     escrever_tsv(entradas, casos)
 
     medicoes = {}
@@ -30,7 +26,7 @@ def main():
         subprocess.run([*comando, str(entradas), str(saida), "ambos"], check=True)
         medicoes[linguagem] = ler_csv(saida)
     verificar_respostas(medicoes, casos)
-    print(f"{sum(map(len, medicoes.values()))} medições verificadas com n = {N} fixo.")
+    print(f"{sum(map(len, medicoes.values()))} medições verificadas com n = {N_ALVO} fixo.")
 
 
 if __name__ == "__main__":

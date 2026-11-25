@@ -1,5 +1,5 @@
 linguagem,n,alvo,status,tempo_s,limite_s
-python,25,501,viavel,54.194821100,60
-python,26,521,interrompido,,60
-cpp,29,581,viavel,46.259801100,60
-cpp,30,601,interrompido,,60
+python,26,521,viavel,40.646398917,60
+python,27,541,interrompido,,60
+cpp,30,601,viavel,39.581360625,60
+cpp,31,621,interrompido,,60

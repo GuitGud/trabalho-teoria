@@ -1,0 +1,27 @@
+---
+title: "Subconjunto Soma (Subset Sum): força bruta e programação dinâmica"
+subtitle: "Teoria da Computação · Projeto de Complexidade · Equipe 4 · Prof. Daniel Bezerra"
+author:
+  - Israel Erlich
+  - Luís Augusto
+  - Theo Moura
+  - Guilherme Rabelo
+date: "24 de novembro de 2026"
+abstract-title: "Repositório"
+abstract: "Código-fonte, entradas, medições e testes: <https://github.com/GuitGud/trabalho-teoria>"
+lang: pt-BR
+papersize: a4
+geometry: margin=2.2cm
+fontsize: 11pt
+mainfont: STIX Two Text
+mathfont: STIX Two Math
+monofont: Menlo
+monofontoptions: Scale=0.82
+colorlinks: true
+header-includes:
+  - \usepackage{float}
+  - \usepackage{xurl}
+  - \floatplacement{figure}{H}
+  - \usepackage{etoolbox}
+  - \AtBeginEnvironment{longtable}{\footnotesize}
+---

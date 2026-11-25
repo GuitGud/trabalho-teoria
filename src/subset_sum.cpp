@@ -2,8 +2,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -18,8 +20,48 @@
 #include <windows.h>
 #endif
 
+namespace memoria {
+std::size_t bytes_atuais = 0;
+std::size_t pico_bytes = 0;
+
+template <typename T>
+struct Contador {
+    using value_type = T;
+
+    Contador() = default;
+
+    template <typename U>
+    Contador(const Contador<U>&) noexcept {}
+
+    T* allocate(std::size_t quantidade) {
+        T* bloco = std::allocator<T>().allocate(quantidade);
+        bytes_atuais += quantidade * sizeof(T);
+        if (bytes_atuais > pico_bytes) {
+            pico_bytes = bytes_atuais;
+        }
+        return bloco;
+    }
+
+    void deallocate(T* bloco, std::size_t quantidade) noexcept {
+        bytes_atuais -= quantidade * sizeof(T);
+        std::allocator<T>().deallocate(bloco, quantidade);
+    }
+};
+
+template <typename T, typename U>
+bool operator==(const Contador<T>&, const Contador<U>&) noexcept {
+    return true;
+}
+
+template <typename T, typename U>
+bool operator!=(const Contador<T>&, const Contador<U>&) noexcept {
+    return false;
+}
+}
+
 using Valor = std::uint64_t;
 using Valores = std::vector<Valor>;
+using Auxiliar = std::vector<std::uint8_t, memoria::Contador<std::uint8_t>>;
 using Algoritmo = bool (*)(const Valores&, Valor);
 
 #ifdef _WIN32
@@ -56,7 +98,7 @@ std::int64_t duracao_ns(Instante inicio, Instante fim) {
 
 bool forca_bruta(const Valores& valores, Valor alvo) {
     const std::size_t n = valores.size();
-    std::vector<std::uint8_t> mascara(n, 0);
+    Auxiliar mascara(n, 0);
 
     while (true) {
         Valor soma = 0;
@@ -82,7 +124,7 @@ bool forca_bruta(const Valores& valores, Valor alvo) {
 }
 
 bool programacao_dinamica(const Valores& valores, Valor alvo) {
-    std::vector<std::uint8_t> alcancavel(static_cast<std::size_t>(alvo) + 1, 0);
+    Auxiliar alcancavel(static_cast<std::size_t>(alvo) + 1, 0);
     alcancavel[0] = 1;
 
     for (Valor valor : valores) {
@@ -168,29 +210,82 @@ std::vector<Caso> ler_entradas(std::istream& entrada) {
     return casos;
 }
 
-void executar(const std::vector<Caso>& casos, Algoritmo algoritmo,
-              const std::string& nome, std::ostream& saida) {
-    const Valores aquecimento{3, 5, 9};
-    for (int i = 0; i < 5; ++i) {
-        algoritmo(aquecimento, 8);
-    }
+constexpr std::int64_t lote_minimo_ns = 1'000'000;
+constexpr std::int64_t chamada_longa_ns = 1'000'000'000;
+constexpr std::int64_t aquecimento_ns = 500'000'000;
+constexpr std::size_t lote_maximo = std::size_t{1} << 30;
 
+struct Amostra {
+    bool resposta;
+    std::int64_t tempo_ns;
+};
+
+Amostra cronometrar(Algoritmo algoritmo, const Caso& caso, std::size_t chamadas) {
+    volatile Algoritmo chamada = algoritmo;
+    bool resposta = false;
+    const auto inicio = agora();
+    for (std::size_t i = 0; i < chamadas; ++i) {
+        resposta = chamada(caso.valores, caso.alvo);
+    }
+    const auto fim = agora();
+    return {resposta, duracao_ns(inicio, fim)};
+}
+
+void medir_tempo(const std::vector<Caso>& casos, Algoritmo algoritmo,
+                 const std::string& nome, std::ostream& saida) {
     for (const Caso& caso : casos) {
+        std::size_t chamadas = 1;
+        Amostra amostra = cronometrar(algoritmo, caso, chamadas);
+        while (amostra.tempo_ns < lote_minimo_ns && chamadas < lote_maximo) {
+            chamadas *= 2;
+            amostra = cronometrar(algoritmo, caso, chamadas);
+        }
+        const bool reaproveitar = amostra.tempo_ns >= chamada_longa_ns;
         for (std::size_t repeticao = 1; repeticao <= caso.repeticoes; ++repeticao) {
-            const auto inicio = agora();
-            const bool resposta = algoritmo(caso.valores, caso.alvo);
-            const auto fim = agora();
-            const auto tempo = duracao_ns(inicio, fim);
+            if (repeticao > 1 || !reaproveitar) {
+                amostra = cronometrar(algoritmo, caso, chamadas);
+            }
             saida << caso.id << ',' << caso.cenario << ',' << caso.valores.size() << ','
-                  << caso.alvo << ',' << nome << ',' << repeticao << ',' << resposta << ','
-                  << tempo << '\n';
+                  << caso.alvo << ',' << nome << ',' << repeticao << ',' << amostra.resposta << ','
+                  << static_cast<double>(amostra.tempo_ns) / static_cast<double>(chamadas) << ','
+                  << chamadas << '\n';
         }
     }
 }
 
+void medir_memoria(const std::vector<Caso>& casos, Algoritmo algoritmo,
+                   const std::string& nome, std::ostream& saida) {
+    volatile Algoritmo chamada = algoritmo;
+    for (const Caso& caso : casos) {
+        for (std::size_t repeticao = 1; repeticao <= caso.repeticoes; ++repeticao) {
+            const std::size_t base = memoria::bytes_atuais;
+            memoria::pico_bytes = base;
+            const bool resposta = chamada(caso.valores, caso.alvo);
+            const std::size_t pico = memoria::pico_bytes - base;
+            saida << caso.id << ',' << caso.cenario << ',' << caso.valores.size() << ','
+                  << caso.alvo << ',' << nome << ',' << repeticao << ',' << resposta << ','
+                  << pico << '\n';
+        }
+    }
+}
+
+void executar(const std::vector<Caso>& casos, Algoritmo algoritmo,
+              const std::string& nome, bool memoria, std::ostream& saida) {
+    const Caso aquecimento{"aquecimento", "aquecimento", 8, 1, {3, 5, 9}};
+    const auto inicio = agora();
+    while (duracao_ns(inicio, agora()) < aquecimento_ns) {
+        cronometrar(algoritmo, aquecimento, 64);
+    }
+    if (memoria) {
+        medir_memoria(casos, algoritmo, nome, saida);
+    } else {
+        medir_tempo(casos, algoritmo, nome, saida);
+    }
+}
+
 int main(int argc, char* argv[]) {
-    if (argc != 4) {
-        std::cerr << "Uso: subset_sum ENTRADA.tsv SAIDA.csv {forca_bruta|pd|ambos}\n";
+    if (argc != 4 && argc != 5) {
+        std::cerr << "Uso: subset_sum ENTRADA.tsv SAIDA.csv {forca_bruta|pd|ambos} [tempo|memoria]\n";
         return 2;
     }
     const std::string modo = argv[3];
@@ -198,6 +293,12 @@ int main(int argc, char* argv[]) {
         std::cerr << "Algoritmo desconhecido: " << modo << '\n';
         return 2;
     }
+    const std::string medida = argc == 5 ? argv[4] : "tempo";
+    if (medida != "tempo" && medida != "memoria") {
+        std::cerr << "Medida desconhecida: " << medida << '\n';
+        return 2;
+    }
+    const bool memoria = medida == "memoria";
 
     try {
         std::ifstream entrada(argv[1]);
@@ -209,12 +310,14 @@ int main(int argc, char* argv[]) {
         if (!saida) {
             throw std::runtime_error("nao foi possivel criar o CSV de saida");
         }
-        saida << "caso,cenario,n,alvo,algoritmo,repeticao,resposta,tempo_ns\n";
+        saida << "caso,cenario,n,alvo,algoritmo,repeticao,resposta,"
+              << (memoria ? "pico_bytes" : "tempo_ns,chamadas") << '\n';
+        saida << std::fixed << std::setprecision(3);
         if (modo != "pd") {
-            executar(casos, forca_bruta, "forca_bruta", saida);
+            executar(casos, forca_bruta, "forca_bruta", memoria, saida);
         }
         if (modo != "forca_bruta") {
-            executar(casos, programacao_dinamica, "pd", saida);
+            executar(casos, programacao_dinamica, "pd", memoria, saida);
         }
         saida.flush();
         if (!saida) {

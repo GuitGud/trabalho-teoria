@@ -41,7 +41,7 @@ def medir_ponto(linguagem, comando, n, diretorio):
         linha, = ler_csv(saida)
         if linha["caso"] != caso[0] or linha["resposta"] != "0":
             raise ValueError(f"resultado inesperado no caso {caso[0]} em {linguagem}")
-        tempo = int(linha["tempo_ns"]) / 1e9
+        tempo = float(linha["tempo_ns"]) / 1e9
         status = "viavel" if tempo <= LIMITE_S else "acima"
     return {
         "linguagem": linguagem, "n": n, "alvo": caso[2], "status": status,
@@ -87,7 +87,7 @@ def main():
     for linguagem in linguagens:
         linhas = ler_csv(args.resultados / f"medicoes_{linguagem}.csv")
         tempos = [
-            int(linha["tempo_ns"]) / 1e9 for linha in linhas
+            float(linha["tempo_ns"]) / 1e9 for linha in linhas
             if linha["algoritmo"] == "forca_bruta" and linha["cenario"] == "pior" and int(linha["n"]) == base
         ]
         estimativas[linguagem] = estimar_n(base, statistics.median(tempos))

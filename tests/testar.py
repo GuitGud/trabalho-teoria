@@ -65,6 +65,13 @@ def testar(comando, destino, casos):
         divergencias = [chave for chave, valor in esperadas.items() if obtidas.get(chave) != valor]
         raise AssertionError(f"divergências ou registros extras em {comando[0]}: {divergencias[:10]}")
 
+    subprocess.run([*comando, str(entrada), str(saida), "ambos", "memoria"], check=True)
+    picos = ler_csv(saida)
+    if indexar_respostas(picos) != esperadas or any(int(linha["pico_bytes"]) < 0 for linha in picos):
+        raise AssertionError(f"modo memoria divergente em {comando[0]}")
+    if subprocess.run([*comando, str(entrada), str(saida), "ambos", "outra"], capture_output=True).returncode == 0:
+        raise AssertionError("a interface deveria rejeitar uma medida desconhecida")
+
     escrever_tsv(entrada, [("negativo", "teste", 1, 1, (-1, 2))])
     execucao = subprocess.run([*comando, str(entrada), str(saida), "ambos"], capture_output=True)
     if execucao.returncode != 1:
@@ -79,7 +86,7 @@ def main():
     with TemporaryDirectory(prefix="subset-sum-testes-") as temp:
         for comando in (compilar(args.cxx), PYTHON):
             testar(comando, Path(temp), casos)
-    print(f"OK: {len(casos)} casos, {len(casos) * 4} decisões e rejeição de entrada negativa nas duas interfaces.")
+    print(f"OK: {len(casos)} casos, {len(casos) * 4} decisões, modo de memória e rejeição de entradas inválidas nas duas interfaces.")
 
 
 if __name__ == "__main__":
